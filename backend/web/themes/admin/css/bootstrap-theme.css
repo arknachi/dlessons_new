@@ -1,0 +1,35 @@
+/*!
+ * Bootstrap v3.1.0 (http://getbootstrap.com)
+ * Copyright 2011-2014 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ */
+
+/*Panel*/
+.panel-primary { border-color: #3C8DBC; }
+.panel-primary > .panel-heading { color: #ffffff; background-color: #3C8DBC; border-color: #3C8DBC; }
+.panel-primary > .panel-heading + .panel-collapse .panel-body { border-top-color: #3C8DBC; }
+.panel-primary > .panel-footer + .panel-collapse .panel-body { border-bottom-color: #3C8DBC; }
+.panel-success { border-color: #5cb85c; }
+.panel-success > .panel-heading { color: #ffffff; background-color: #5cb85c; border-color: #5cb85c; }
+.panel-success > .panel-heading + .panel-collapse .panel-body { border-top-color: #5cb85c; }
+.panel-success > .panel-footer + .panel-collapse .panel-body { border-bottom-color: #5cb85c; }
+.panel-info { border-color: #5bc0de; }
+.panel-info > .panel-heading { color: #ffffff; background-color: #5bc0de; border-color: #5bc0de; }
+.panel-info > .panel-heading + .panel-collapse .panel-body { border-top-color: #5bc0de; }
+.panel-info > .panel-footer + .panel-collapse .panel-body { border-bottom-color: #5bc0de; }
+.panel-warning { border-color: #f0ad4e; }
+.panel-warning > .panel-heading { color: #ffffff; background-color: #f0ad4e; border-color: #f0ad4e; }
+.panel-warning > .panel-heading + .panel-collapse .panel-body { border-top-color: #f0ad4e; }
+.panel-warning > .panel-footer + .panel-collapse .panel-body { border-bottom-color: #f0ad4e; }
+.panel-danger { border-color: #d9534f; }
+.panel-danger > .panel-heading { color: #ffffff; background-color: #d9534f; border-color: #d9534f; }
+.panel-danger > .panel-heading + .panel-collapse .panel-body { border-top-color: #d9534f; }
+.panel-danger > .panel-footer + .panel-collapse .panel-body { border-bottom-color: #d9534f; }
+
+
+
+/*custom*/
+.bg-green {
+  background: #3C8DBC !important;
+  color: #000 !important;
+}
