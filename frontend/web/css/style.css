@@ -1,0 +1,349 @@
+@charset "utf-8";
+/* CSS Document */
+
+@import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,600');
+body {
+	background:#2f9ed7;
+	font-family: 'Poppins', sans-serif;
+	font-size:16px;
+	line-height:22px;
+	color:#2e2e2e;
+	font-weight:300;
+}
+img {
+	max-width:100%;
+	height:auto
+}
+.sitebg {
+	width:100%;
+	float:left;
+	padding:20px;
+	background:#ffffff;
+	margin:50px 0px 50px 0px;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+.header-cont {
+	width:100%;
+	float:left;
+	margin-bottom:25px;
+}
+.btn {
+	font-weight:300;
+}
+.top-links {
+	margin-top:15px;
+}
+.steps-cont {
+	width:100%;
+	float:left;
+}
+.breadcrumb {
+	padding: 0px;
+	background: transparent;
+	list-style: none;
+	overflow: hidden;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	border-radius: 4px;
+}
+.breadcrumb>li {
+	display: table-cell;
+	vertical-align: top;
+	width: 1%;
+	color:#2e2e2e;
+}
+.breadcrumb>li+li:before {
+	padding: 0;
+}
+.breadcrumb li a {
+	color: white;
+	text-decoration: none;
+	padding: 10px 0 10px 35px;
+	position: relative;
+	display: inline-block;
+	width: calc( 100% - 10px );
+	background-color: hsla(0, 0%, 83%, 1);
+	color:#2e2e2e;
+	text-transform: capitalize;
+	height:70px;
+}
+.breadcrumb li.active a {
+	background: brown;
+	background: hsla(153, 57%, 51%, 1);
+}
+.breadcrumb li.active a:after {
+	border-left: 30px solid hsla(153, 57%, 51%, 1);
+}
+.breadcrumb li:first-child a {
+	padding-left: 15px;
+}
+.breadcrumb li:last-of-type a {
+	width: calc( 100% - 38px );
+}
+.breadcrumb li a:before {
+	content: " ";
+	display: block;
+	width: 0;
+	height: 0;
+	border-top: 50px solid transparent;
+	border-bottom: 50px solid transparent;
+	border-left: 30px solid white;
+	position: absolute;
+	top: 50%;
+	margin-top: -50px;
+	margin-left: 1px;
+	left: 100%;
+	z-index: 1;
+}
+.breadcrumb li a:after {
+	content: " ";
+	display: block;
+	width: 0;
+	height: 0;
+	border-top: 50px solid transparent;
+	border-bottom: 50px solid transparent;
+	border-left: 30px solid hsla(0, 0%, 83%, 1);
+	position: absolute;
+	top: 50%;
+	margin-top: -50px;
+	left: 100%;
+	z-index: 2;
+}
+.steps-cont .number {
+	float:left;
+	font-size:40px;
+	margin-top:15px;
+	margin-right:5px;
+}
+.body-cont {
+	width:100%;
+	float:left;
+	margin-top:0px;
+}
+.page-heading {
+	width:100%;
+	float:left;
+}
+.page-heading h1 {
+	font-size:28px;
+	border-bottom:#e7e7e7 solid 1px;
+	padding-bottom:10px;
+	margin-bottom: 25px;
+}
+.body-cont label {
+	font-size:15px;
+	font-weight:300;
+	line-height:30px;
+}
+.body-cont .btn-success {
+	font-size:20px;
+	padding:5px 25px;
+}
+.panel-primary > .panel-heading {
+	background-color: #545454;
+	border-color: #545454;
+	color: #ffffff;
+}
+.panel-primary {
+	border-color: #545454;
+}
+.panel-body {
+	font-size:16px;
+}
+.panel-body table td {
+	padding:10px 5px;
+}
+.total {
+	border-top:#e7e7e7 solid 1px;
+}
+.breadcrumb .active a {
+	color:#ffffff !important;
+}
+.tab3 {
+	line-height:50px;
+}
+.tab3 .number {
+	margin-top:0px;
+}
+.body-cont {
+	font-size:14px;
+}
+.btn-danger {
+	background:#e11d09;
+	border:#e11d09;
+}
+.body-cont .btn-success, .body-cont .btn-danger {
+	font-size:20px;
+	padding:5px 25px;
+}
+
+.payment-message
+{
+	width:100%;
+	float:left;
+	font-size:22px;
+}
+
+.payment-message h2
+{
+	margin-top:40px;
+	font-weight:500;
+	font-size:24px;
+}
+
+.payment-message span
+{
+	color:#4eb958;
+	font-weight:500;
+}
+
+
+
+.welcome-msg
+{
+	font-size:16px;
+	line-height:28px;
+}
+
+.myaccount-list
+{
+	margin-top:25px;
+}
+
+.myaccount-list ul
+{
+	margin:0px 0px 0px 0px;
+	padding:0px 0px 0px 0px;
+}
+
+.myaccount-list ul li
+{
+	list-style:none;
+	font-size:16px;
+	padding:0px 0px 15px 0px;
+}
+
+.myaccount-list ul li a
+{
+	color:#2e2e2e;
+}
+
+.myaccount-list ul li::before
+{
+	font-family:'Glyphicons Halflings';
+	content:"\e029";
+	margin-right:5px;
+	line-height:22px;
+	font-size:15px;
+
+}
+
+/* V */
+.myaccount-relist a
+{
+	margin-top:25px;
+        font-size:16px;
+	padding:0px 0px 15px 0px;
+	color:#2e2e2e;
+}
+
+.myaccount-relist::before
+{
+	font-family:'Glyphicons Halflings';
+	content:"\e029";
+	margin-right:5px;
+	line-height:22px;
+	font-size:15px;
+
+}
+
+
+/****** LOGIN MODAL ******/
+.loginmodal-container {
+  padding: 30px;
+  max-width: 350px;
+  width: 100% !important;
+  background-color: #F7F7F7;
+  margin: 0 auto;
+  border-radius: 2px;
+  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+
+}
+
+.loginmodal-container h1 {
+  text-align: center;
+  font-size: 1.8em;
+}
+
+.loginmodal-container input[type=submit] {
+  width: 100%;
+  display: block;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.loginmodal-container input[type=text], input[type=password] {
+  height: 44px;
+  font-size: 16px;
+  width: 100%;
+  margin-bottom: 10px;
+  -webkit-appearance: none;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-top: 1px solid #c0c0c0;
+  /* border-radius: 2px; */
+  padding: 0 8px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+.loginmodal-container input[type=text]:hover, input[type=password]:hover {
+  border: 1px solid #b9b9b9;
+  border-top: 1px solid #a0a0a0;
+  -moz-box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  -webkit-box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.loginmodal {
+  text-align: center;
+  font-size: 14px;
+  font-family: 'Arial', sans-serif;
+  font-weight: 700;
+  height: 36px;
+  padding: 0 8px;
+/* border-radius: 3px; */
+/* -webkit-user-select: none;
+  user-select: none; */
+}
+
+.loginmodal-submit {
+  /* border: 1px solid #3079ed; */
+  border: 0px;
+  color: #ffffff;
+  text-shadow: 0 1px rgba(0,0,0,0.1);
+  background-color: #286090;
+  padding: 17px 0px;
+  font-family: roboto;
+  font-size: 16px;
+  /* background-image: -webkit-gradient(linear, 0 0, 0 100%,   from(#4d90fe), to(#4787ed)); */
+}
+
+
+.loginmodal-container a {
+  text-decoration: none;
+  color: #666;
+  font-weight: 400;
+  text-align: center;
+  display: inline-block;
+  opacity: 0.6;
+  transition: opacity ease 0.5s;
+}
+
+.login-help{
+  font-size: 12px;
+}
+

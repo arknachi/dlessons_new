@@ -1,0 +1,12 @@
+/*16-11-2016*/
+.thumbnail {
+	padding:0;
+}
+
+.custom-error{
+    color: #a94442;
+}
+
+.table-bordered a{
+    text-decoration: none;
+}
