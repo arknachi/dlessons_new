@@ -14,6 +14,7 @@ use yii\web\View;
 $this->title = 'Schedules';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
 <div class="db-schedules-index">
     <p style="text-align: right;">
         <?= Html::a('Create Schedule', ['create'], ['class' => 'btn btn-success']) ?>
@@ -34,37 +35,21 @@ $this->params['breadcrumbs'][] = $this->title;
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
             'lesson.lesson_name',
-            'instructor.fullname',
             [
-                'attribute' => 'schedule_date',
-                'format' => ['date', 'php:m-d-Y'],
-                'options' => ['width' => '10%'],
+              'header' => 'Total Hours',
+                'attribute' =>  'lesson.hours',  
             ],
             [
-                'attribute' => 'start_time',
+                 'header' => 'Remaining Hours',
                 'format' => 'raw',
                 'value' => function ($model) {
-                    return date('h:i a', strtotime($model->start_time));
+                    $time1 = strtotime($model->start_time);
+                    $time2 = strtotime($model->end_time);
+                    $difference = round(abs($time2 - $time1) / 3600, 2);
+                    return $difference;
                 },
             ],
-            [
-                'attribute' => 'end_time',
-                'format' => 'raw',
-                'value' => function ($model) {
-                    return date('h:i a', strtotime($model->end_time));
-                },
-            ],
-            [
-                'attribute' => 'schedule_type',
-                'format' => 'raw',
-                'value' => function ($model) {
-                    if ($model->schedule_type == 1) {
-                        return "Pickup";
-                    } else if ($model->schedule_type == 2) {
-                        return "Office";
-                    }
-                },
-            ],
+          
             [
                 'attribute' => 'stdcrsid',
                 'format' => 'raw',
@@ -93,7 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 $sc_stat = '<span class="label label-success">Completed</span>';
                             } else if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "0") {
                                 $url = "javascript:void(0)";
-                                $icondisp = '<span title="Click to change the schedule status" class="label label-danger">Not yet complete</span>';                               
+                                $icondisp = '<span title="Click to change the schedule status" class="label label-danger">Not yet complete</span>';
                                 $sc_stat = "<div id='stat_flag_" . $scmodel->scr_id . "'>" . Html::a($icondisp, $url, [
                                             'class' => 'scstatus',
                                             'data' => [
@@ -111,22 +96,15 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'class' => 'yii\grid\ActionColumn',
-                'template' => '{assign_students}&nbsp;&nbsp;{scheduled_students}&nbsp;&nbsp;{update}&nbsp;&nbsp;&nbsp;{delete}',
+                'template' => '{assign_students}&nbsp;&nbsp;{scheduled_students}&nbsp;&nbsp;{view}&nbsp;&nbsp;&nbsp;{delete}',
                 'buttons' => [
 //                    'assign_students' => function ($url, $model) {
 //                        $url = Url::toRoute('schedules/assignstudents?id=' . $model->schedule_id);
 //                        return Html::a('<span title="Assign Students" class="fa fa-group"></span>', $url);
 //                    },
-                    'update' => function ($url, $model) {
-                        $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
-                        if ($scmodel) {
-                            if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "1") {
-                                return "";
-                            } else {
-                                $url = Url::toRoute('schedules/update?id=' . $model->schedule_id);
-                                return Html::a('<span class="glyphicon glyphicon-pencil"></span>', $url, ['id' => "updateicon_" . $scmodel->scr_id]);
-                            }
-                        }
+                    'view' => function ($url, $model) {
+                        $url = Url::toRoute('schedules/view?id=' . $model->schedule_id);
+                        return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-eye-open"></span>', $url);
                     },
                     'delete' => function ($url, $model) {
                         $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
@@ -134,7 +112,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "1") {
                                 return "";
                             } else {
-                                return Html::a('<span class="glyphicon glyphicon-trash" title="Delete"></span>', ['schedules/delete', 'id' => $model->schedule_id], ['id' => "deleteicon_" . $scmodel->scr_id, "data-pjax" => 0, 'onClick' => 'return confirm("Are you sure you want to delete this schedule?") ',  "data-method" => "post"]);
+                                return Html::a('<span class="glyphicon glyphicon-trash" title="Delete"></span>', ['schedules/delete', 'id' => $model->schedule_id], ['id' => "deleteicon_" . $scmodel->scr_id, "data-pjax" => 0, 'onClick' => 'return confirm("Are you sure you want to delete this schedule?") ', "data-method" => "post"]);
                             }
                         }
                     },
@@ -148,10 +126,10 @@ $this->params['breadcrumbs'][] = $this->title;
     ]);
     ?>
 </div>
-<?php
-/* For update the status of the schedule */
-$callback = Yii::$app->urlManager->createUrl(['admin/schedules/statusupdate']);
-$script = <<< JS
+    <?php
+    /* For update the status of the schedule */
+    $callback = Yii::$app->urlManager->createUrl(['admin/schedules/statusupdate']);
+    $script = <<< JS
       
     jQuery(document).ready(function () { 
          $('.scstatus').on('click', function() {
@@ -177,5 +155,5 @@ $script = <<< JS
          });
     });
 JS;
-$this->registerJs($script, View::POS_END);
-?>
+    $this->registerJs($script, View::POS_END);
+    ?>

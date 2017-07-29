@@ -6,6 +6,8 @@ use common\models\DbSchedules;
 use common\models\DbSchedulesSearch;
 use common\models\DlInsAvailableDays;
 use common\models\DlInstructors;
+use common\models\DlLessons;
+use common\models\DlStudent;
 use common\models\DlStudentCourse;
 use Yii;
 use yii2fullcalendar\models\Event;
@@ -35,7 +37,7 @@ class SchedulesController extends Controller {
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['index', 'create', 'update', 'delete', 'scheduledstudents', 'unassignpaidstud', 'ins_schedule_info', 'available_ins_info', 'chckscheduleexist', 'statusupdate'],
+                        'actions' => ['index', 'create', 'update', 'view', 'delete', 'scheduledstudents', 'unassignpaidstud', 'ins_schedule_info', 'available_ins_info', 'chckscheduleexist', 'statusupdate'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -112,26 +114,28 @@ class SchedulesController extends Controller {
     public function actionIns_schedule_info() {
         if (Yii::$app->request->isAjax) {
             $data = array();
-            
+
             $_index = $ins_id = $schedule_date = '';
-            
+
 //            $ins_id = $_POST['DbSchedules']['instructor_id'];
-            if($_POST['DbSchedules']){
-                foreach($_POST['DbSchedules'] as $key => $DbSchedules){
-                    if(isset($DbSchedules['instructor_id'])){$ins_id = $DbSchedules['instructor_id']; $_index = $key;}
-                    if(isset($DbSchedules['schedule_date']))
+            if ($_POST['DbSchedules']) {
+                foreach ($_POST['DbSchedules'] as $key => $DbSchedules) {
+                    if (isset($DbSchedules['instructor_id'])) {
+                        $ins_id = $DbSchedules['instructor_id'];
+                        $_index = $key;
+                    }
+                    if (isset($DbSchedules['schedule_date']))
                         $schedule_date = $DbSchedules['schedule_date'];
                 }
             }
-            
-                    
+
+
             $schedule_date = Yii::$app->formatter->asDate($schedule_date, 'php:Y-m-d');
 
             $crsmodel = DlInsAvailableDays::find()->where([
                         'instructor_id' => $ins_id,
                         'available_date' => $schedule_date,
                     ])->one();
-
             if ($crsmodel) {
 
                 /* Check the existing start time in the schedule list */
@@ -140,7 +144,7 @@ class SchedulesController extends Controller {
                             'instructor_id' => $ins_id,
                             'status' => 1,
                         ])->orderBy(['end_time' => SORT_DESC])->one();
-
+//                print_r($schedules_list);
                 $data['available_date'] = Yii::$app->formatter->asDate($crsmodel->available_date, 'php:m/d/Y');
                 if ($schedules_list) {
                     $strtTime = strtotime("+1 minute", strtotime($schedules_list->end_time));
@@ -149,11 +153,13 @@ class SchedulesController extends Controller {
                     $data['start_time'] = date('h:i a', strtotime($crsmodel->start_time));
                 }
                 $data['end_time'] = date('h:i a', strtotime($crsmodel->end_time));
-                $data['instructor_id'] = $crsmodel->instructor_id;                 
-                $data['start_time_id'] = "#dbschedules-".$_index."-start_time";
-                $data['end_time_id'] = "#dbschedules-".$_index."-end_time";
-                        
+                $data['instructor_id'] = $crsmodel->instructor_id;
+                $data['start_time_id'] = "#dbschedules-" . $_index . "-start_time";
+                $data['end_time_id'] = "#dbschedules-" . $_index . "-end_time";
+
                 echo json_encode($data);
+//                print_r($data);
+                exit;
             }
         }
     }
@@ -281,8 +287,28 @@ class SchedulesController extends Controller {
      * @return mixed
      */
     public function actionView($id) {
+        $model = $this->findModel($id);
+
+        $students_info = DlStudentCourse::find()->andWhere([
+                    'lesson_id' => $model->lesson_id,
+                    'admin_id' => $model->admin_id,
+                    'schedule_id' => $model->schedule_id,
+                    'scr_paid_status' => 1,
+                ])->one();
+        
+        $stud_info = DlStudent::find()->andWhere([
+                    'student_id' => $students_info->student_id,])->one();
+          
+        $les_info = DlLessons::find()->andWhere([
+                    'lesson_id' =>  $model->lesson_id,])->one();
+        
+
+        
         return $this->render('view', [
-                    'model' => $this->findModel($id),
+                    'model' => $model,
+            'stud_info'=>$stud_info,
+            'les_info'=>$les_info,
+            
         ]);
     }
 
@@ -294,40 +320,59 @@ class SchedulesController extends Controller {
     public function actionCreate() {
         $session = Yii::$app->session;
         $model = new DbSchedules();
-        $modelsschedules  = [new DbSchedules];
+        $modelsschedules = [new DbSchedules];
         $model->setScenario('create');
 
         if ($model->load(Yii::$app->request->post())) {
+            $models = Yii::$app->request->post();
 
-            $model->admin_id = Yii::$app->user->identity->ParentAdminId;
-            $model->schedule_date = (isset($model->schedule_date)) ? Yii::$app->formatter->asDate($model->schedule_date, 'php:Y-m-d') : "";
-            $model->start_time = date('H:i:s', strtotime($model->start_time));
-            $model->end_time = date('H:i:s', strtotime($model->end_time));
-            $model->isDeleted = 0;
-            if ($session->has('cityid')) {
-                $model->city_id = $session->get('cityid');
-            }
+            $lesson_id = $models['DbSchedules']['lesson_id'];
+            unset($models['DbSchedules']['lesson_id']);
+            $stdcrsid = $models['DbSchedules']['stdcrsid'];
+            unset($models['DbSchedules']['stdcrsid']);
+//            $location_id = $models['DbSchedules']['location_id'];
 
-            if ($model->validate()) {
-                $stdcrsid = $model->stdcrsid;
 
-                $model->location_id = ($model->schedule_type == 2) ? $model->location_id : 0;
-                $model->created_by = Yii::$app->user->identity->id;
-                $model->created_at = date("Y-m-d H:i:s");
-                $model->updated_at = date("Y-m-d H:i:s");
+            foreach ($models['DbSchedules'] as $modelinfo) {
+                $model = new DbSchedules();
 
-                /* Add the schedule and Assign the schedule for the student course */
-                if ($model->save() && $stdcrsid != "") {
-
-                    $schedule_id = $model->schedule_id;
-                    $crsmodel = DlStudentCourse::findOne($stdcrsid);
-                    $crsmodel->schedule_id = $schedule_id;
-                    $crsmodel->save();
+//                  print_r($modelinfo ['schedule_type']);exit;
+                $model->admin_id = Yii::$app->user->identity->ParentAdminId;
+                $root = Yii::$app->formatter->asDate($modelinfo['schedule_date'], 'php:Y-m-d');
+                $model->schedule_date = (isset($modelinfo['schedule_date'])) ? $root : "";
+                $model->instructor_id = $modelinfo ['instructor_id'];
+                $model->start_time = date('H:i:s', strtotime($modelinfo ['start_time']));
+                $model->end_time = date('H:i:s', strtotime($modelinfo ['end_time']));
+                $model->schedule_type = $modelinfo ['schedule_type'];
+                $model->location_id = $modelinfo['location_id'];
+                $model->isDeleted = 0;
+                if ($session->has('cityid')) {
+                    $model->city_id = $session->get('cityid');
                 }
-
-                \Yii::$app->getSession()->setFlash('success', 'Schedule infos added successfully!!!');
-                return $this->redirect(['index']);
+                $model->lesson_id = $lesson_id;
+//              echo'helo';
+//                print_r($model->schedule_date); print_r($model->start_time);print_r( $model->end_time );  exit;
+                if ($model->validate()) {
+//                      echo 'hii';
+                    $model->location_id = ($model->schedule_type == 2) ? $model->location_id : 0;
+                    $model->created_by = Yii::$app->user->identity->id;
+                    $model->created_at = date("Y-m-d H:i:s");
+                    $model->updated_at = date("Y-m-d H:i:s");
+                    $model->save();
+                }
             }
+            /* Add the schedule and Assign the schedule for the student course */
+
+            if ($stdcrsid != "") {
+
+                $schedule_id = $model->schedule_id;
+                $crsmodel = DlStudentCourse::findOne($stdcrsid);
+                $crsmodel->schedule_id = $schedule_id;
+                $crsmodel->save();
+            }
+
+            \Yii::$app->getSession()->setFlash('success', 'Schedule infos added successfully!!!');
+            return $this->redirect(['index']);
         }
 
         $instructors = ArrayHelper::map(
@@ -449,7 +494,7 @@ class SchedulesController extends Controller {
 
         return $this->render('create', [
                     'model' => $model,
-                    'modelsschedules'=> $modelsschedules,
+                    'modelsschedules' => $modelsschedules,
                     'instructors' => $instructors,
                     'events' => $events
         ]);

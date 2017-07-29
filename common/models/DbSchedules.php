@@ -112,7 +112,9 @@ class DbSchedules extends ActiveRecord {
     public function getInstructor() {
         return $this->hasOne(DlInstructors::className(), ['instructor_id' => 'instructor_id']);
     }
-
+    public function getDlStudentCourses() {
+        return $this->hasMany(DlStudentCourse::className(), ['schedule_id' => 'schedule_id']);
+    }
     public function getLocation() {
         return $this->hasOne(DlLocations::className(), ['location_id' => 'location_id']);
     }

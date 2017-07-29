@@ -1,49 +1,28 @@
 <?php
 
-use yii\helpers\Html;
-use yii\widgets\DetailView;
+use common\models\DbSchedules;
+use yii\web\View;
 
-/* @var $this yii\web\View */
-/* @var $model common\models\DbSchedules */
+/* @var $this View */
+/* @var $model DbSchedules */
 
-$this->title = $model->schedule_id;
+$this->title = "Schedule Info";
 $this->params['breadcrumbs'][] = ['label' => 'Schedules', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="db-schedules-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
 
-    <p>
-        <?= Html::a('Update', ['update', 'id' => $model->schedule_id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Delete', ['delete', 'id' => $model->schedule_id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
-                'method' => 'post',
-            ],
-        ]) ?>
-    </p>
+    <h2> Student:  <?php echo $stud_info->first_name . ' ' . $stud_info->last_name; ?> </h2>
 
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            'schedule_id',
-            'lesson_id',
-            'instructor_id',
-            'schedule_date',
-            'start_time',
-            'end_time',
-            'city',
-            'state',
-            'zip',
-            'country',
-            'status',
-            'created_at',
-            'updated_at',
-            'created_by',
-            'updated_by',
-        ],
-    ]) ?>
+    <h2> Lesson:  <?php echo $les_info->lesson_name; ?> </h2>
 
-</div>
+    <h2> Total Hours:  <?php echo $les_info->hours; ?> </h2>
+
+    <div>
+        <?php
+//        echo $this->render('schedule_info', [
+//            'model' => $model,
+//        ]);
+        ?>
+    </div>  
