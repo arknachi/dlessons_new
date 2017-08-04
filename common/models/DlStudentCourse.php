@@ -59,7 +59,7 @@ class DlStudentCourse extends ActiveRecord {
         return [
             [['ads_id', 'lesson_id', 'admin_id', 'student_id', 'scr_registerdate'], 'required'],
             [['preferred_days', 'preferred_time'], 'required', 'on' => 'basic_info'],
-            [['ads_id', 'lesson_id', 'admin_id', 'student_id', 'schedule_id', 'scr_disclaimer_status', 'scr_paid_status', 'scr_skpststus', 'scr_completed_status', 'scr_certificate_status', 'scr_status'], 'integer'],
+            [['ads_id', 'lesson_id', 'admin_id', 'student_id', 'scr_disclaimer_status', 'scr_paid_status', 'scr_skpststus', 'scr_completed_status', 'scr_certificate_status', 'scr_status'], 'integer'],
             [['scr_registerdate', 'scr_completed_date', 'scr_certificate_send_date', 'created_at', 'updated_at'], 'safe'],
             [['additional_infos'], 'string'],
             [['scr_skip_url', 'scr_certificate_serialno', 'preferred_days', 'preferred_time'], 'string', 'max' => 255],
@@ -79,8 +79,7 @@ class DlStudentCourse extends ActiveRecord {
             'ads_id' => 'Ads',
             'lesson_id' => 'Lesson',
             'admin_id' => 'Admin',
-            'student_id' => 'Student',
-            'schedule_id' => 'Schedule',
+            'student_id' => 'Student',            
             'scr_disclaimer_status' => 'Disclaimer Status',
             'scr_paid_status' => 'Paid Status',
             'scr_skpststus' => 'Scr Skpststus',
@@ -100,7 +99,7 @@ class DlStudentCourse extends ActiveRecord {
         ];
     }
 
-    public function student_courses($lesson_id, $adminid, $schedule_id = 0) {
+    public function student_courses($lesson_id, $adminid) {
         $query = DlStudentCourse::find();
 
         $dataProvider = new ActiveDataProvider([
@@ -111,7 +110,6 @@ class DlStudentCourse extends ActiveRecord {
         $query->andFilterWhere([
             'lesson_id' => $lesson_id,
             'admin_id' => $adminid,
-            'schedule_id' => $schedule_id,
             'scr_paid_status' => 1
         ]);
 
@@ -129,7 +127,7 @@ class DlStudentCourse extends ActiveRecord {
      * @return ActiveQuery
      */
     public function getSchedule() {
-        return $this->hasOne(DbSchedules::className(), ['schedule_id' => 'schedule_id']);
+        return $this->hasOne(DbSchedules::className(), ['scr_id' => 'scr_id']);
     }
 
     /**

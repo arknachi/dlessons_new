@@ -57,22 +57,22 @@ $form = ActiveForm::begin([
 
 
     <?php if (!$model->isNewRecord) { ?>
-      <?= $form->field($model, 'schedule_date')->textInput(['class' => 'form-control datepicker']) ?>   
-    <?= $form->field($model, 'instructor_id')->dropDownList($instructors,['prompt'=>'--- Select Instructor ---'])->label("Instructor"); ?>
-    <?= $form->field($model, 'start_time')->textInput(['class' => 'form-control timepicker']) ?>
-    <?= $form->field($model, 'end_time')->textInput(['class' => 'form-control timepicker']) ?>
-    
+        <?= $form->field($model, 'schedule_date')->textInput(['class' => 'form-control datepicker']) ?>   
+        <?= $form->field($model, 'instructor_id')->dropDownList($instructors, ['prompt' => '--- Select Instructor ---'])->label("Instructor"); ?>
+        <?= $form->field($model, 'start_time')->textInput(['class' => 'form-control timepicker']) ?>
+        <?= $form->field($model, 'end_time')->textInput(['class' => 'form-control timepicker']) ?>
+
         <div class="form-group">
             <label class="col-sm-2 control-label">Lesson</label>
             <div class="col-sm-5"><?php echo $model->lesson->lesson_name; ?></div>
             <input id="dbschedules-lesson_id" type="hidden" name="DbSchedules[lesson_id]" value="<?php echo $model->lesson_id; ?>">
         </div>
-    <?php
+        <?php
     } else {
         echo $form->field($model, 'lesson_id')->dropDownList(ArrayHelper::map(DlAdminLessons::find()->andWhere('admin_id = :adm_id and status=1', [':adm_id' => Yii::$app->user->identity->ParentAdminId])->all(), 'lesson_id', 'lessons.lesson_name'), ['prompt' => '--- Select Lesson ---'])->label("Lesson");
     }
     ?>
-<?php if (!$model->isNewRecord) { ?>
+    <?php if (!$model->isNewRecord) { ?>
         <div class="form-group field-dbschedules-studentdisp">
             <label class="col-sm-2 control-label">Scheduled Student Info</label>
             <div class="col-sm-5">
@@ -81,12 +81,13 @@ $form = ActiveForm::begin([
                     $students_info = ArrayHelper::map(DlStudentCourse::find()->where([
                                         'lesson_id' => $model->lesson_id,
                                         'admin_id' => $model->admin_id,
-                                        'schedule_id' => $model->schedule_id,
+//                                        'schedule_id' => $model->schedule_id,
+                                        'scr_id' => $model->scr_id,
                                         'scr_paid_status' => 1
-                                    ])->all(), "schedule_id", function($model, $defaultValue) {
+                                    ])->all(), "scr_id", function($model, $defaultValue) {
                                 return $model->studentinfo;
                             });
-                    echo isset($students_info[$model->schedule_id]) ? $students_info[$model->schedule_id] : "";
+                    echo isset($students_info[$model->scr_id]) ? $students_info[$model->scr_id] : "";
                     ?>    
                 </div>
             </div>
@@ -95,17 +96,20 @@ $form = ActiveForm::begin([
     }
     ?>
     <?= $form->field($model, 'stdcrsid')->dropDownList(array(), array()); ?>
-      <?php if (!$model->isNewRecord) { 
-                    echo     $form->field($model, 'schedule_type')->dropDownList([1 => 'Pickup', 2 => 'Office'], ['class' => 'form-control schedule_type'])->label('Type') ?>
-       
-    <div class="location_id">
-      <?php  echo $form->field($model, 'location_id')->dropDownList(ArrayHelper::map(DlLocations::find()->andWhere('admin_id = :adm_id', [':adm_id' => Yii::$app->user->identity->ParentAdminId])->all(), 'location_id', 
-            function($model, $defaultValue) {
-                    return $model['address1'].','.$model['city'].','.$model['state'].','.$model['country'].' - '.$model['zip'];
-                }
-            ))->label("Location");?>
-            </div> 
-    <?php  }?>
+    <?php
+    if (!$model->isNewRecord) {
+        echo $form->field($model, 'schedule_type')->dropDownList([1 => 'Pickup', 2 => 'Office'], ['class' => 'form-control schedule_type'])->label('Type')
+        ?>
+
+    <div class="location_id" style="display: none;">
+            <?php
+            echo $form->field($model, 'location_id')->dropDownList(ArrayHelper::map(DlLocations::find()->andWhere('admin_id = :adm_id', [':adm_id' => Yii::$app->user->identity->ParentAdminId])->all(), 'location_id', function($model, $defaultValue) {
+                        return $model['address1'] . ',' . $model['city'] . ',' . $model['state'] . ',' . $model['country'] . ' - ' . $model['zip'];
+                    }
+            ))->label("Location");
+            ?>
+        </div> 
+    <?php } ?>
 
 
     <?php if ($model->isNewRecord) { ?>
@@ -134,7 +138,7 @@ $form = ActiveForm::begin([
 
         <div class="container-items"><!-- widgetContainer -->
 
-    <?php foreach ($modelsschedules as $index => $modelschedules): ?>
+            <?php foreach ($modelsschedules as $index => $modelschedules): ?>
                 <div class="item panel panel-default"><!-- widgetBody -->
                     <div class="panel-heading">
                         <span class="panel-title-schedule">Schedule: <?= ($index + 1) ?></span>
@@ -143,48 +147,42 @@ $form = ActiveForm::begin([
                     </div>
                     <div class="panel-body schedule">                        
                         <?= $form->field($modelschedules, "[{$index}]schedule_date")->textInput(['class' => 'form-control schedule_date datepicker', 'data-index' => $index]) ?>                           
-        <?= $form->field($modelschedules, "[{$index}]instructor_id")->dropDownList($instructors, ['prompt' => '--- Select Instructor ---', 'class' => 'form-control instructor_id', 'data-index' => $index])->label("Instructor"); ?>
-                    <?= $form->field($modelschedules, "[{$index}]start_time")->textInput(['class' => 'form-control timepicker']) ?>
-                    <?= $form->field($modelschedules, "[{$index}]end_time")->textInput(['class' => 'form-control timepicker']) ?>
-                   
-                        
-                        <?= $form->field($modelschedules, "[{$index}]schedule_type")->dropDownList([1 => 'Pickup', 2 => 'Office'], ['class' => 'form-control schedule_type'])->label('Type') ?>
-
-                        
-<?php // echo '<pre>'; print_r($modelschedules->schedule_type);exit;?>
-                    
-                    <div class="location_id">        
-                    <?=
-                    $form->field($modelschedules, "[{$index}]location_id")->dropDownList(ArrayHelper::map(DlLocations::find()->andWhere('admin_id = :adm_id', [':adm_id' => Yii::$app->user->identity->ParentAdminId])->all(), 'location_id', function($modelschedules, $defaultValue) {
-                                return $modelschedules['address1'] . ',' . $modelschedules['city'] . ',' . $modelschedules['state'] . ',' . $modelschedules['country'] . ' - ' . $modelschedules['zip'];
-                            }
-                    ),['class' => 'form-control '])->label("Location");
-                    ?> </div></div>
+                        <?= $form->field($modelschedules, "[{$index}]instructor_id")->dropDownList($instructors, ['prompt' => '--- Select Instructor ---', 'class' => 'form-control instructor_id', 'data-index' => $index])->label("Instructor"); ?>
+                        <?= $form->field($modelschedules, "[{$index}]start_time")->textInput(['class' => 'form-control timepicker']) ?>
+                        <?= $form->field($modelschedules, "[{$index}]end_time")->textInput(['class' => 'form-control timepicker']) ?>
+                        <?= $form->field($modelschedules, "[{$index}]schedule_type")->dropDownList([1 => 'Pickup', 2 => 'Office'], ['class' => 'form-control schedule_type'])->label('Type') ?>                       
+                        <div class="location_id" style="display: none;">        
+                            <?=
+                            $form->field($modelschedules, "[{$index}]location_id")->dropDownList(ArrayHelper::map(DlLocations::find()->andWhere('admin_id = :adm_id', [':adm_id' => Yii::$app->user->identity->ParentAdminId])->all(), 'location_id', function($modelschedules, $defaultValue) {
+                                        return $modelschedules['address1'] . ',' . $modelschedules['city'] . ',' . $modelschedules['state'] . ',' . $modelschedules['country'] . ' - ' . $modelschedules['zip'];
+                                    }
+                                    ), ['class' => 'form-control '])->label("Location");
+                            ?> </div></div>
                 </div>
 
-        <?php endforeach; ?>
+            <?php endforeach; ?>
 
         </div>
         <button type="button" class="pull-right add-item btn btn-success btn-xs"><i class="fa fa-plus"></i> Split Schedule</button>
         <div class="clearfix"></div>
-    <?php DynamicFormWidget::end(); ?>
-<?php } ?>
+        <?php DynamicFormWidget::end(); ?>
+    <?php } ?>
 
-<?php //$form->field($model, 'status')->radioList([1 => 'Enable', 0 => 'Disbaled'])->label('Status') ?>
+    <?php //$form->field($model, 'status')->radioList([1 => 'Enable', 0 => 'Disbaled'])->label('Status')   ?>
 
 </div><!-- /.box-body -->
 <?php
 if (!$model->isNewRecord) {
     ?>
-  <?= $form->field($model, 'scr_completed_status')->dropDownList([0=> 'Not Yet Complete',1 => 'Completed', 2 => 'Cancelled'], ['class' => 'form-control'])->label('Status') ?>
+    <?= $form->field($model, 'scr_completed_status')->dropDownList([0 => 'Not Yet Complete', 1 => 'Completed', 2 => 'Cancelled'], ['class' => 'form-control'])->label('Status') ?>
     <div class="form-group">
-                <?php echo Html::hiddenInput('schedule_id', $model->schedule_id, ['class' => 'form-control']); ?>
+        <?php echo Html::hiddenInput('schedule_id', $model->schedule_id, ['class' => 'form-control']); ?>
     </div>
 <?php } ?>
 <div class="box-footer">
     <div class="form-group">
         <div class="col-sm-0 col-sm-offset-2">
-<?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['id' => 'schedule-button', 'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
+            <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', ['id' => 'schedule-button', 'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary']) ?>
         </div>
     </div>
 </div>
@@ -211,27 +209,7 @@ $script = <<< JS
             $(".dynamicform_wrapper .panel-title-schedule").each(function(index) {
                 $(this).html("Schedule: " + (index + 1))            
             });   
-        
-        
-            $(".dynamicform_wrapper .panel-title-schedule").each(function(index) {
-                    
-                var id ="#dbschedules-"+index+"-schedule_type";
-        
-                var schedule_type = $(id).val();        
-//                alert(schedule_type);
-                var location_id = "#dbschedules-"+index+"-location_id";
-        
-//                if(schedule_type != 2)
-//            $(location_id).parents('.location').hide(); 
-                    
-                if(schedule_type == 2){
-                    $(location_id).parents('.location').show();
-                }else{           
-                    $(location_id).parents('.location').hide();
-                    }
-            });   
             
-        
             $(".dynamicform_wrapper .schedule_date").each(function(index) {               
                 $(this).attr("data-index",(index))                    
             });
@@ -241,9 +219,7 @@ $script = <<< JS
             $('.timepicker').timepicker({
                                     timeFormat: 'hh:mm tt'
                                 }); 
-            //$(".datepicker").datepicker();
             initdatepicker();
-//            scheduletype();
         });
 
         $(".dynamicform_wrapper").on("afterDelete", function(e) {
@@ -277,29 +253,14 @@ $script = <<< JS
            return testing;    
         }); 
                 
-              
-                      
-//        $('#dbschedules-schedule_date').removeClass('hasDatepicker');        
-        
-//        $('#dbschedules-schedule_date').datepicker({
-           
         initdatepicker(); 
-            scheduletype();
-       
-                        $('.location_id').hide();
-//             $(document).on('ifChanged', '.schedule_type', function() {
-//        $('.schedule_type').on('ifChecked', function (event) {     
-//            var stype = $(this).val();
-//            alert(stype);  
-//            if(stype==2){
-//                   
-//                $('.location_id').show();
-//            }else{
-//                  
-//                $('.location_id').hide();
-//            }
-//        }); 
-                
+        $("body").on('change',".schedule_type",function(){
+            if($(this).val() == 2){
+                $(this).closest('.panel-body').find('.location_id').show();
+            }else{
+                $(this).closest('.panel-body').find('.location_id').hide();
+            }
+        });
                 
         $('#dbschedules-stdcrsid').selectpicker({
             liveSearch: true,
@@ -334,9 +295,7 @@ $script = <<< JS
            });  
         }
                 
-//        $('#dbschedules-instructor_id').on('change', function() {
         $(document).on('change','.instructor_id', function() {
-//                alert('fdf');
             var ins_id = $(this).val();     
             if(ins_id!="")  
               instructorlist(ins_id);   
@@ -376,26 +335,6 @@ $script = <<< JS
             }
         }); 
         }
-                
-                function scheduletype(){
-                
-            $('.location_id').hide();
-            $(".schedule_type").on("click",function(){
-
-                        var atype = $(this).val();
-
-                      var index = $(this).data('index');  
-                  if(atype==2){
-
-                      $('.location_id').show();
-                  }else{
-
-                      $('.location_id').hide();
-                  }
-                 });
-            }
-                
-                
 JS;
 $this->registerJs($script, View::POS_END);
 ?>

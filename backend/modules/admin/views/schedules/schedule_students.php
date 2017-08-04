@@ -30,6 +30,10 @@ $this->params['breadcrumbs'][] = $this->title;
             echo "<h3>Course Completed Date : ". Yii::$app->myclass->date_dispformat($scrsmodel->scr_completed_date)."</h3>";
         } 
         
+        if($model->scr_completed_status==2){ 
+             echo "<h3>Schedule Status : Cancelled</h3>";
+         }
+        
         $hear = DlStudentProfile::$hearAbout;
         $lang = DlStudentProfile::$langList;
        

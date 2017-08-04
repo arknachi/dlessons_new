@@ -32,12 +32,12 @@ class SchedulesController extends Controller {
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
-                    [
+                        [
                         'actions' => [''],
                         'allow' => true,
                     ],
-                    [
-                        'actions' => ['index', 'create', 'update', 'view', 'delete', 'scheduledstudents', 'unassignpaidstud', 'ins_schedule_info', 'available_ins_info', 'chckscheduleexist', 'statusupdate'],
+                        [
+                        'actions' => ['index', 'create', 'update', 'view', 'delete', 'deleteSCR', 'scheduledstudents', 'unassignpaidstud', 'ins_schedule_info', 'available_ins_info', 'chckscheduleexist', 'statusupdate'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -59,7 +59,7 @@ class SchedulesController extends Controller {
     public function actionIndex() {
         $searchModel = new DbSchedulesSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        
+
         return $this->render('index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
@@ -84,14 +84,37 @@ class SchedulesController extends Controller {
             $lesson_id = $_POST['id'];
             if (isset(Yii::$app->user->identity->ParentAdminId) && $lesson_id != "") {
                 $adminid = Yii::$app->user->identity->ParentAdminId;
-                $query = DlStudentCourse::find()->andWhere([
+                $querys = DlStudentCourse::find()->andWhere([
                             'lesson_id' => $lesson_id,
                             'admin_id' => $adminid,
-//                            'schedule_id' => "0",
-                            'scr_paid_status' => "1"
+                            'scr_paid_status' => '1',
+                            'scr_completed_status' => '0',
                         ])->all();
+                
+                //Check Avalilable Schedules
+                $avaliable = array();
+                foreach ($querys as $query) {
 
-                $students_list = ArrayHelper::map($query, "scr_id", function($model, $defaultValue) {
+                    $les_info = DlLessons::find()->Where(['lesson_id' => $lesson_id,])->one();
+                    $total_hours = $les_info->hours;
+                    $remainings = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $query->scr_id, 'id' => 2, 'delval'=>'0'])->sum('hours'));
+                    $different = abs($total_hours - $remainings);
+
+                    if ($different > 0) {
+                        $avaliable[] = $query->scr_id;
+                    }
+                }
+
+                $querys_new = DlStudentCourse::find()
+                                ->where(['in', 'scr_id', $avaliable])
+                                ->andWhere([
+                                    'lesson_id' => $lesson_id,
+                                    'admin_id' => $adminid,
+                                    'scr_paid_status' => '1',
+                                    'scr_completed_status' => '0',
+                                ])->all();
+
+                $students_list = ArrayHelper::map($querys_new, "scr_id", function($model, $defaultValue) {
                             return $model->studentinfo;
                         });
 
@@ -272,10 +295,10 @@ class SchedulesController extends Controller {
         $scrsmodel = DlStudentCourse::find()->where([
                     'lesson_id' => $lesson_id,
                     'admin_id' => $admid,
-                    'schedule_id' => $id,
-                    'scr_paid_status' => 1
+                    'scr_paid_status' => 1,
+                    'scr_id' => $schedulemodel->scr_id,
+
                 ])->one();
-//print_r($scrsmodel);exit;
         return $this->render('schedule_students', [
                     'model' => $this->findModel($id),
                     'scrsmodel' => $scrsmodel,
@@ -287,24 +310,23 @@ class SchedulesController extends Controller {
      * @param integer $id
      * @return mixed
      */
-    public function actionView($id) {   
+    public function actionView($id) {
 //        $model = DbSchedules::find()->where(['scr_id'=>$id])->all();     
-        
+
         $searchModel = new DbSchedulesSearch();
         $dataProvider = $searchModel->searchlist(Yii::$app->request->queryParams, $id);
-        
+
         $students_info = DlStudentCourse::find()->Where(['scr_id' => $id])->one();
-               
+
         $stud_info = DlStudent::find()->Where(['student_id' => $students_info->student_id,])->one();
-        
+
         $les_info = DlLessons::find()->Where(['lesson_id' => $students_info->lesson_id,])->one();
-        
+
         $total_hours = $les_info->hours;
-        
-        $remainings = DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id', ['tour_id' => $id, 'id' => 2])->sum('hours');
-        
+
+        $remainings = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id and isDeleted = :delval', ['tour_id' => $id, 'id' => 2, 'delval'=>'0'])->sum('hours'));
         $different = abs($total_hours - $remainings);
-        
+
 
         return $this->render('view', [
                     'stud_info' => $stud_info,
@@ -347,8 +369,9 @@ class SchedulesController extends Controller {
                 $model->end_time = date('H:i:s', strtotime($modelinfo ['end_time']));
                 $time1 = strtotime($model->start_time);
                 $time2 = strtotime($model->end_time);
-                $model->hours = round(abs($time2 - $time1) / 3600, 2);
-//                  print_r( $model->hours);exit;
+
+                $model->hours = round(abs($time2 - $time1) / 3600);
+
                 $model->schedule_type = $modelinfo ['schedule_type'];
                 $model->location_id = $modelinfo['location_id'];
                 $model->isDeleted = 0;
@@ -368,10 +391,7 @@ class SchedulesController extends Controller {
             /* Add the schedule and Assign the schedule for the student course */
 
             if ($stdcrsid != "") {
-
-                $schedule_id = $model->schedule_id;
                 $crsmodel = DlStudentCourse::findOne($stdcrsid);
-                $crsmodel->schedule_id = $schedule_id;
                 $crsmodel->save();
             }
 
@@ -579,18 +599,18 @@ class SchedulesController extends Controller {
                 $model->scr_completed_status = $status;
                 $model->save();
 
-                if ($stdcrsid != "") {
-                    $schedule_id = $model->schedule_id;
-
-                    DlStudentCourse::updateAll(['schedule_id' => 0], "schedule_id = '" . $schedule_id . "'");
-
-                    $crsmodel = DlStudentCourse::findOne($stdcrsid);
-                    $crsmodel->schedule_id = $schedule_id;
-                    $crsmodel->save();
-                }
+//                if ($stdcrsid != "") {
+//                    $schedule_id = $model->schedule_id;
+//
+//                    DlStudentCourse::updateAll(['schedule_id' => 0], "schedule_id = '" . $schedule_id . "'");
+//
+//                    $crsmodel = DlStudentCourse::findOne($stdcrsid);
+//                    $crsmodel->schedule_id = $schedule_id;
+//                    $crsmodel->save();
+//                }
 
                 \Yii::$app->getSession()->setFlash('success', 'Schedule infos updated successfully!!!');
-                return $this->redirect(['view', 'id' => $model->schedule_id]);
+                return $this->redirect(['view', 'id' => $model->scr_id]);
             } else {
                 //print_r($model->errors);exit;
             }
@@ -607,7 +627,6 @@ class SchedulesController extends Controller {
         if ($available_instructors)
             $instructors = array_intersect_key($instructors, $available_instructors);
 
-
         return $this->render('update', [
                     'model' => $model,
                     'instructors' => $instructors
@@ -620,11 +639,26 @@ class SchedulesController extends Controller {
      * @param integer $id
      * @return mixed
      */
-    public function actionDelete($id) {
+    public function actionDelete($id) {        
+//        DlStudentCourse::updateAll(['schedule_id' => 0], "schedule_id = '" . $id . "'");
+//        $this->findModel($id)->delete();
+//        $model = DbSchedules::find()->where(['schedule_id'=>$id])->delete();
 
-        DlStudentCourse::updateAll(['schedule_id' => 0], "schedule_id = '" . $id . "'");
         $this->findModel($id)->delete();
+        \Yii::$app->getSession()->setFlash('success', 'Schedule infos deleted successfully!!!');
 
+//        if(DbSchedules::find()->where(['schedule_id'=>$id])->delete()){       
+//            \Yii::$app->getSession()->setFlash('success', 'Schedule infos deleted successfully!!!');
+//        }else{
+//            \Yii::$app->getSession()->setFlash('danger', 'Schedule infos not delete');
+//        }
+        return $this->redirect(['index']);
+    }
+
+    public function actionDeleteSCR($id) {
+
+        $models = DbSchedules::find()->select('schedule_id')->Where(['scr_id' => $id])->all();       
+        $models->delete();
         \Yii::$app->getSession()->setFlash('success', 'Schedule infos deleted successfully!!!');
         return $this->redirect(['index']);
     }

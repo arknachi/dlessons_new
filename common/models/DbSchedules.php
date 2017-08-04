@@ -72,7 +72,7 @@ class DbSchedules extends ActiveRecord {
             'created_by' => 'Created By',
             'updated_by' => 'Updated By',
             'stdcrsid' => 'Student Name',
-            'sch_status' => 'Schedule Status'
+            'sch_status' => 'Schedule Status',            
         ];
     }
 
@@ -113,7 +113,7 @@ class DbSchedules extends ActiveRecord {
         return $this->hasOne(DlInstructors::className(), ['instructor_id' => 'instructor_id']);
     }
     public function getDlStudentCourses() {
-        return $this->hasOne(DlStudentCourse::className(), ['scr_id ' => 'scr_id']);
+        return $this->hasOne(DlStudentCourse::className(), ['scr_id' => 'scr_id']);
     }
     public function getLocation() {
         return $this->hasOne(DlLocations::className(), ['location_id' => 'location_id']);

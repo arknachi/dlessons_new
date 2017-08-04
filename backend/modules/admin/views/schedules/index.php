@@ -3,6 +3,7 @@
 use common\models\DbSchedules;
 use common\models\DlLessons;
 use common\models\DlStudentCourse;
+use common\models\DlStudent;
 use yii\data\ActiveDataProvider;
 use yii\grid\GridView;
 use yii\helpers\ArrayHelper;
@@ -40,18 +41,8 @@ $this->params['breadcrumbs'][] = $this->title;
              [
                 'attribute' => 'Student Name',
                 'format' => 'raw',
-                'value' => function ($model) {
-                    if ($model->schedule_id) {
-                        $students_info = ArrayHelper::map(DlStudentCourse::find()->where([
-                                            'lesson_id' => $model->lesson_id,
-                                            'admin_id' => $model->admin_id,
-                                            'schedule_id' => $model->schedule_id,
-                                            'scr_paid_status' => 1
-                                        ])->all(), "schedule_id", function($model, $defaultValue) {
-                                            return $model->student->first_name . " " . $model->student->last_name;
-                                        });
-                        return isset($students_info[$model->schedule_id]) ? $students_info[$model->schedule_id] : "";
-                    }
+                'value' => function ($model) {                    
+                        return $model->dlStudentCourses->student->first_name.' '.$model->dlStudentCourses->student->last_name;
                 },
             ],
             [
@@ -63,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'raw',
                 'value' => function ($model) {
                     $studcrid = $model->scr_id;
-                    $remainings = DbSchedules::find()->where('scr_id = :tour_id and scr_completed_status != :id', ['tour_id' => $studcrid, 'id' => 2])->all();
+                    $remainings = DbSchedules::find()->where('scr_id = :tour_id and scr_completed_status != :id and isDeleted = :delval', ['tour_id' => $studcrid, 'id' => 2, 'delval'=>'0'])->all();
                     $sum = 0;
                     foreach ($remainings as $remaining) {
                         $sum += $remaining->hours;
@@ -82,26 +73,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 'value' => function ($model) {
                     if ($model->schedule_id) {
 
-                        $schedule_count = DbSchedules::find()->where('scr_id = :tour_id and scr_completed_status = :id', ['tour_id' => $model->scr_id, 'id' => 0])->count();
-
-                        $scmodel = DlStudentCourse::find()->where(['scr_id' => $model->scr_id])->one();
+//                        $schedule_count = DbSchedules::find()->where('scr_id = :tour_id and scr_completed_status = :id', ['tour_id' => $model->scr_id, 'id' => 0])->count();
+//
+//                        $scmodel = DlStudentCourse::find()->where(['scr_id' => $model->scr_id])->one();
 //                        if ($schedule_count) {
-                        if ($schedule_count <= 0) {
-                            $sc_stat = '<span class="label label-success">Completed</span>';
-                        } else {
-//                                $url = "javascript:void(0)";
+                        if($model->dlStudentCourses->scr_completed_status =='0'){
                             $sc_stat = '<span title="Click to change the schedule status" class="label label-danger">Not yet complete</span>';
-//                                $sc_stat = "<div id='stat_flag_" . $scmodel->scr_id . "'>" . Html::a($icondisp, $url, [
-//                                            'class' => 'scstatus',
-//                                            'data' => [
-//                                                'id' => $scmodel->scr_id,
-//                                            ],
-//                                        ]) . "</div>";
+                        }else{
+                            $sc_stat = '<span class="label label-success">Completed</span>';
                         }
 
-//                        } else {
-//                            $sc_stat = '<span class="label label-danger">Not yet complete</span>';
-//                        }
 
                         return $sc_stat;
                     }
@@ -116,18 +97,15 @@ $this->params['breadcrumbs'][] = $this->title;
 //                        return Html::a('<span title="Assign Students" class="fa fa-group"></span>', $url);
 //                    },
                     'view' => function ($url, $model) {
-                        $url = Url::toRoute('schedules/view?id='.$model->schedule_id);
-                        return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-eye-open"></span>', $url);
+                        $url = Url::toRoute('schedules/view?id='.$model->scr_id);
+                        return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-tasks"></span>', $url);
                     },
                     'delete' => function ($url, $model) {
-                        $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
-                        if ($scmodel) {
-                            if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "1") {
-                                return "";
-                            } else {
-                                return Html::a('<span class="glyphicon glyphicon-trash" title="Delete"></span>', ['schedules/delete', 'id' => $model->scr_id], ['id' => "deleteicon_" . $model->scr_id, "data-pjax" => 0, 'onClick' => 'return confirm("Are you sure you want to delete this schedule?") ', "data-method" => "post"]);
-                            }
-                        }
+                        if ($model->dlStudentCourses->scr_paid_status == "1" && $model->dlStudentCourses->scr_completed_status == "1") {
+                               return "";
+                           } else {
+                               return Html::a('<span class="glyphicon glyphicon-trash" title="Delete"></span>', ['schedules/deleteSCR', 'id' => $model->scr_id], ['id' => "deleteicon_" . $model->scr_id, "data-pjax" => 0, 'onClick' => 'return confirm("Are you sure you want to delete this schedule?") ', "data-method" => "post"]);
+                           }
                     },
 //                    'scheduled_students' => function ($url, $model) {
 //                        $url = Url::toRoute('schedules/scheduledstudents?id=' . $model->schedule_id);
