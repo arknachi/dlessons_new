@@ -21,11 +21,11 @@ $this->params['breadcrumbs'][] = $this->title;
         <p><strong>Location Info</strong> : <?php echo $model->locationaddress;?></p>
         <?php } 
         
-         if($scrsmodel->scr_completed_status==0){ 
+         if($model->scr_completed_status==0){ 
              echo "<h3>Schedule Status : Pending</h3>";
          }
          
-        if($scrsmodel->scr_completed_status==1){ 
+        if($model->scr_completed_status==1){ 
             echo "<h3>Schedule Status : Completed </h3>";
             echo "<h3>Course Completed Date : ". Yii::$app->myclass->date_dispformat($scrsmodel->scr_completed_date)."</h3>";
         } 

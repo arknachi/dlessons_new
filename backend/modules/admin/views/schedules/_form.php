@@ -57,6 +57,11 @@ $form = ActiveForm::begin([
 
 
     <?php if (!$model->isNewRecord) { ?>
+      <?= $form->field($model, 'schedule_date')->textInput(['class' => 'form-control datepicker']) ?>   
+    <?= $form->field($model, 'instructor_id')->dropDownList($instructors,['prompt'=>'--- Select Instructor ---'])->label("Instructor"); ?>
+    <?= $form->field($model, 'start_time')->textInput(['class' => 'form-control timepicker']) ?>
+    <?= $form->field($model, 'end_time')->textInput(['class' => 'form-control timepicker']) ?>
+    
         <div class="form-group">
             <label class="col-sm-2 control-label">Lesson</label>
             <div class="col-sm-5"><?php echo $model->lesson->lesson_name; ?></div>
@@ -90,6 +95,18 @@ $form = ActiveForm::begin([
     }
     ?>
     <?= $form->field($model, 'stdcrsid')->dropDownList(array(), array()); ?>
+      <?php if (!$model->isNewRecord) { 
+                    echo     $form->field($model, 'schedule_type')->dropDownList([1 => 'Pickup', 2 => 'Office'], ['class' => 'form-control schedule_type'])->label('Type') ?>
+       
+    <div class="location_id">
+      <?php  echo $form->field($model, 'location_id')->dropDownList(ArrayHelper::map(DlLocations::find()->andWhere('admin_id = :adm_id', [':adm_id' => Yii::$app->user->identity->ParentAdminId])->all(), 'location_id', 
+            function($model, $defaultValue) {
+                    return $model['address1'].','.$model['city'].','.$model['state'].','.$model['country'].' - '.$model['zip'];
+                }
+            ))->label("Location");?>
+            </div> 
+    <?php  }?>
+
 
     <?php if ($model->isNewRecord) { ?>
         <?php
@@ -131,7 +148,7 @@ $form = ActiveForm::begin([
                     <?= $form->field($modelschedules, "[{$index}]end_time")->textInput(['class' => 'form-control timepicker']) ?>
                    
                         
-                        <?= $form->field($modelschedules, "[{$index}]schedule_type")->radioList([1 => 'Pickup', 0 => 'Office'], ['itemOptions' => ['class' => 'schedule_type'],])->label('Type') ?>
+                        <?= $form->field($modelschedules, "[{$index}]schedule_type")->dropDownList([1 => 'Pickup', 2 => 'Office'], ['class' => 'form-control schedule_type'])->label('Type') ?>
 
                         
 <?php // echo '<pre>'; print_r($modelschedules->schedule_type);exit;?>
@@ -159,6 +176,7 @@ $form = ActiveForm::begin([
 <?php
 if (!$model->isNewRecord) {
     ?>
+  <?= $form->field($model, 'scr_completed_status')->dropDownList([0=> 'Not Yet Complete',1 => 'Completed', 2 => 'Cancelled'], ['class' => 'form-control'])->label('Status') ?>
     <div class="form-group">
                 <?php echo Html::hiddenInput('schedule_id', $model->schedule_id, ['class' => 'form-control']); ?>
     </div>
@@ -193,7 +211,27 @@ $script = <<< JS
             $(".dynamicform_wrapper .panel-title-schedule").each(function(index) {
                 $(this).html("Schedule: " + (index + 1))            
             });   
+        
+        
+            $(".dynamicform_wrapper .panel-title-schedule").each(function(index) {
+                    
+                var id ="#dbschedules-"+index+"-schedule_type";
+        
+                var schedule_type = $(id).val();        
+//                alert(schedule_type);
+                var location_id = "#dbschedules-"+index+"-location_id";
+        
+//                if(schedule_type != 2)
+//            $(location_id).parents('.location').hide(); 
+                    
+                if(schedule_type == 2){
+                    $(location_id).parents('.location').show();
+                }else{           
+                    $(location_id).parents('.location').hide();
+                    }
+            });   
             
+        
             $(".dynamicform_wrapper .schedule_date").each(function(index) {               
                 $(this).attr("data-index",(index))                    
             });
@@ -205,7 +243,7 @@ $script = <<< JS
                                 }); 
             //$(".datepicker").datepicker();
             initdatepicker();
-            scheduletype()
+//            scheduletype();
         });
 
         $(".dynamicform_wrapper").on("afterDelete", function(e) {
@@ -216,7 +254,6 @@ $script = <<< JS
                 $(this).attr("data-index",(index))                    
             });
         });
-        var schedtype = '{$modelschedules['schedule_type']}';
         var stdcrsid = '{$model->stdcrsid}';
         
         $("#error_schedule").hide();
@@ -247,22 +284,21 @@ $script = <<< JS
 //        $('#dbschedules-schedule_date').datepicker({
            
         initdatepicker(); 
-         scheduletype();
+            scheduletype();
        
                         $('.location_id').hide();
-                
-             $(document).on('ifChanged', '.schedule_type', function() {
+//             $(document).on('ifChanged', '.schedule_type', function() {
 //        $('.schedule_type').on('ifChecked', function (event) {     
-            var stype = $(this).val();
+//            var stype = $(this).val();
 //            alert(stype);  
-            if(stype==2){
-                   
-                $('.location_id').show();
-            }else{
-                  
-                $('.location_id').hide();
-            }
-        }); 
+//            if(stype==2){
+//                   
+//                $('.location_id').show();
+//            }else{
+//                  
+//                $('.location_id').hide();
+//            }
+//        }); 
                 
                 
         $('#dbschedules-stdcrsid').selectpicker({
@@ -342,18 +378,21 @@ $script = <<< JS
         }
                 
                 function scheduletype(){
+                
             $('.location_id').hide();
-      $(".schedule_type").on("click",function(){
-                  var atype = $(this).val();
-                alert(atype);
-            if(atype==1){
-                   
-                $('.location_id').show();
-            }else{
-                  
-                $('.location_id').hide();
-            }
-           });
+            $(".schedule_type").on("click",function(){
+
+                        var atype = $(this).val();
+
+                      var index = $(this).data('index');  
+                  if(atype==2){
+
+                      $('.location_id').show();
+                  }else{
+
+                      $('.location_id').hide();
+                  }
+                 });
             }
                 
                 

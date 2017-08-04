@@ -21,7 +21,7 @@ class DbSchedulesSearch extends DbSchedules {
     public function rules() {
         return [
             [['schedule_id', 'lesson_id', 'instructor_id', 'created_by', 'updated_by'], 'integer'],
-            [['schedule_date', 'start_time', 'end_time', 'city', 'state', 'zip', 'country', 'status', 'created_at', 'updated_at', 'startdate', 'enddate'], 'safe'],
+            [['schedule_date', 'start_time', 'end_time', 'city', 'state', 'zip','scr_id', 'country', 'status', 'created_at', 'updated_at', 'startdate', 'enddate'], 'safe'],
         ];
     }
 
@@ -48,14 +48,57 @@ class DbSchedulesSearch extends DbSchedules {
      *
      * @return ActiveDataProvider
      */
-    public function search($params) {
+    public function search12($params) {
         $query = DbSchedules::find();
+        $adminid = Yii::$app->user->identity->ParentAdminId;
+//        $query->where('admin_id ='.$adminid);
+//                $students_list = DlStudentCourse::find()->joinWith(['student', 'student.studentProfile'])->where(['admin_id' => $adminid]);
+//        $query = DlStudentCourse::find()->where(['scr_paid_status' =>  1]);
+
+//         $query->groupBy("schedule_id");
+
+        // add conditions that should always apply here
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+            'sort' => ['defaultOrder' => ['admin_id' => SORT_ASC]]
+        ]);
+
+        $this->load($params);
+
+        if (!$this->validate()) {
+            // uncomment the following line if you do not want to return any records when validation fails
+            // $query->where('0=1');
+            return $dataProvider;
+        }
+
+        // grid filtering conditions
+        $query->andFilterWhere([
+             'admin_id' => $this->admin_id,
+            'schedule_id' => $this->schedule_id,
+            'lesson_id' => $this->lesson_id,
+            'instructor_id' => $this->instructor_id,
+            'schedule_date' => $this->schedule_date,
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'created_by' => $this->created_by,
+            'updated_by' => $this->updated_by,
+            'status' => $this->status
+        ]);
+
+        return $dataProvider;
+    }
+    
+     public function search($params) {
+        $query = DbSchedules::find();
+        $query->groupBy('scr_id');
 
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-            'sort' => ['defaultOrder' => ['schedule_date' => SORT_DESC]]
+            'sort' => ['defaultOrder' => ['schedule_date' => SORT_DESC]],
         ]);
 
         $this->load($params);
@@ -83,7 +126,47 @@ class DbSchedulesSearch extends DbSchedules {
 
         return $dataProvider;
     }
+    
 
+     public function searchlist($params,$studcrid) {
+        $query = DbSchedules::find();
+        $adminid = Yii::$app->user->identity->ParentAdminId;
+        $query->where('scr_id ='.$studcrid);
+
+        // add conditions that should always apply here
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+            'sort' => ['defaultOrder' => ['schedule_date' => SORT_DESC]]
+        ]);
+
+        $this->load($params);
+
+        if (!$this->validate()) {
+            // uncomment the following line if you do not want to return any records when validation fails
+            // $query->where('0=1');
+            return $dataProvider;
+        }
+
+        // grid filtering conditions
+        $query->andFilterWhere([
+             'admin_id' => $this->admin_id,
+            'schedule_id' => $this->schedule_id,
+            'lesson_id' => $this->lesson_id,
+            'instructor_id' => $this->instructor_id,
+            'schedule_date' => $this->schedule_date,
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'created_by' => $this->created_by,
+            'updated_by' => $this->updated_by,
+            'status' => $this->status
+        ]);
+
+        return $dataProvider;
+    }
+    
     public function Ins_schedules_search($params, $insid) {
         $query = DbSchedules::find();
 

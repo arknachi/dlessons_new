@@ -44,7 +44,7 @@ class DbSchedules extends ActiveRecord {
             [['lesson_id', 'instructor_id', 'schedule_date'], 'required'],
             [['stdcrsid'], 'required', 'on' => 'create'],
             [['lesson_id', 'instructor_id', 'created_by', 'updated_by'], 'integer'],
-            [['schedule_date', 'start_time', 'end_time', 'created_at', 'updated_at', 'schedule_type', 'location_id', 'stdcrsid','total_hours','remaining_hours'], 'safe'],           
+            [['schedule_date', 'start_time', 'end_time', 'created_at', 'updated_at','scr_id', 'schedule_type', 'location_id', 'stdcrsid','total_hours','remaining_hours','hours'], 'safe'],           
             [['city', 'state', 'zip', 'country'], 'string', 'max' => 100],
             ['schedule_type', 'unique', 'targetAttribute' => ['admin_id', 'lesson_id', 'instructor_id', 'schedule_date', 'start_time', 'end_time', 'schedule_type', 'isDeleted'], 'message' => 'Combination already Exist!!!']
         ];
@@ -113,7 +113,7 @@ class DbSchedules extends ActiveRecord {
         return $this->hasOne(DlInstructors::className(), ['instructor_id' => 'instructor_id']);
     }
     public function getDlStudentCourses() {
-        return $this->hasMany(DlStudentCourse::className(), ['schedule_id' => 'schedule_id']);
+        return $this->hasOne(DlStudentCourse::className(), ['scr_id ' => 'scr_id']);
     }
     public function getLocation() {
         return $this->hasOne(DlLocations::className(), ['location_id' => 'location_id']);

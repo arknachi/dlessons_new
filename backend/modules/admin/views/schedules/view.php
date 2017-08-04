@@ -1,6 +1,7 @@
 <?php
 
 use common\models\DbSchedules;
+use yii\helpers\Html;
 use yii\web\View;
 
 /* @var $this View */
@@ -13,16 +14,23 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="db-schedules-view">
 
 
-    <h2> Student:  <?php echo $stud_info->first_name . ' ' . $stud_info->last_name; ?> </h2>
+    <p style="text-align: right;">
+        <?= Html::a('Add Schedule', ['create'], ['class' => 'btn btn-success']) ?>
+    </p>
 
-    <h2> Lesson:  <?php echo $les_info->lesson_name; ?> </h2>
+    <h3> Student:  <?php echo $stud_info->first_name . ' ' . $stud_info->last_name; ?> </h3>
 
-    <h2> Total Hours:  <?php echo $les_info->hours; ?> </h2>
+    <h3> Lesson:  <?php echo $les_info->lesson_name; ?> </h3>
+    
+    <h3> Total Hours:  <?php echo $les_info->hours; ?> </h3>
+     
+    <h3> Remaining Hours:  <?php echo $different; ?> </h3>
 
     <div>
         <?php
-//        echo $this->render('schedule_info', [
+        echo $this->render('schedule_info', [
 //            'model' => $model,
-//        ]);
+            'dataProvider'=>$dataProvider,
+        ]);
         ?>
     </div>  

@@ -59,7 +59,7 @@ class SchedulesController extends Controller {
     public function actionIndex() {
         $searchModel = new DbSchedulesSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-
+        
         return $this->render('index', [
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
@@ -82,13 +82,12 @@ class SchedulesController extends Controller {
         if (Yii::$app->request->isAjax) {
 
             $lesson_id = $_POST['id'];
-
             if (isset(Yii::$app->user->identity->ParentAdminId) && $lesson_id != "") {
                 $adminid = Yii::$app->user->identity->ParentAdminId;
                 $query = DlStudentCourse::find()->andWhere([
                             'lesson_id' => $lesson_id,
                             'admin_id' => $adminid,
-                            'schedule_id' => "0",
+//                            'schedule_id' => "0",
                             'scr_paid_status' => "1"
                         ])->all();
 
@@ -265,7 +264,9 @@ class SchedulesController extends Controller {
     public function actionScheduledstudents($id) {
 
         $schedulemodel = $this->findModel($id);
+
         $admid = $schedulemodel->admin_id;
+
         $lesson_id = $schedulemodel->lesson_id;
 
         $scrsmodel = DlStudentCourse::find()->where([
@@ -274,7 +275,7 @@ class SchedulesController extends Controller {
                     'schedule_id' => $id,
                     'scr_paid_status' => 1
                 ])->one();
-
+//print_r($scrsmodel);exit;
         return $this->render('schedule_students', [
                     'model' => $this->findModel($id),
                     'scrsmodel' => $scrsmodel,
@@ -286,29 +287,31 @@ class SchedulesController extends Controller {
      * @param integer $id
      * @return mixed
      */
-    public function actionView($id) {
-        $model = $this->findModel($id);
+    public function actionView($id) {   
+//        $model = DbSchedules::find()->where(['scr_id'=>$id])->all();     
+        
+        $searchModel = new DbSchedulesSearch();
+        $dataProvider = $searchModel->searchlist(Yii::$app->request->queryParams, $id);
+        
+        $students_info = DlStudentCourse::find()->Where(['scr_id' => $id])->one();
+               
+        $stud_info = DlStudent::find()->Where(['student_id' => $students_info->student_id,])->one();
+        
+        $les_info = DlLessons::find()->Where(['lesson_id' => $students_info->lesson_id,])->one();
+        
+        $total_hours = $les_info->hours;
+        
+        $remainings = DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id', ['tour_id' => $id, 'id' => 2])->sum('hours');
+        
+        $different = abs($total_hours - $remainings);
+        
 
-        $students_info = DlStudentCourse::find()->andWhere([
-                    'lesson_id' => $model->lesson_id,
-                    'admin_id' => $model->admin_id,
-                    'schedule_id' => $model->schedule_id,
-                    'scr_paid_status' => 1,
-                ])->one();
-        
-        $stud_info = DlStudent::find()->andWhere([
-                    'student_id' => $students_info->student_id,])->one();
-          
-        $les_info = DlLessons::find()->andWhere([
-                    'lesson_id' =>  $model->lesson_id,])->one();
-        
-
-        
         return $this->render('view', [
-                    'model' => $model,
-            'stud_info'=>$stud_info,
-            'les_info'=>$les_info,
-            
+                    'stud_info' => $stud_info,
+                    'les_info' => $les_info,
+                    'searchModel' => $searchModel,
+                    'dataProvider' => $dataProvider,
+                    'different' => $different,
         ]);
     }
 
@@ -336,13 +339,16 @@ class SchedulesController extends Controller {
             foreach ($models['DbSchedules'] as $modelinfo) {
                 $model = new DbSchedules();
 
-//                  print_r($modelinfo ['schedule_type']);exit;
                 $model->admin_id = Yii::$app->user->identity->ParentAdminId;
                 $root = Yii::$app->formatter->asDate($modelinfo['schedule_date'], 'php:Y-m-d');
                 $model->schedule_date = (isset($modelinfo['schedule_date'])) ? $root : "";
                 $model->instructor_id = $modelinfo ['instructor_id'];
                 $model->start_time = date('H:i:s', strtotime($modelinfo ['start_time']));
                 $model->end_time = date('H:i:s', strtotime($modelinfo ['end_time']));
+                $time1 = strtotime($model->start_time);
+                $time2 = strtotime($model->end_time);
+                $model->hours = round(abs($time2 - $time1) / 3600, 2);
+//                  print_r( $model->hours);exit;
                 $model->schedule_type = $modelinfo ['schedule_type'];
                 $model->location_id = $modelinfo['location_id'];
                 $model->isDeleted = 0;
@@ -350,10 +356,8 @@ class SchedulesController extends Controller {
                     $model->city_id = $session->get('cityid');
                 }
                 $model->lesson_id = $lesson_id;
-//              echo'helo';
-//                print_r($model->schedule_date); print_r($model->start_time);print_r( $model->end_time );  exit;
+                $model->scr_id = $stdcrsid;
                 if ($model->validate()) {
-//                      echo 'hii';
                     $model->location_id = ($model->schedule_type == 2) ? $model->location_id : 0;
                     $model->created_by = Yii::$app->user->identity->id;
                     $model->created_at = date("Y-m-d H:i:s");
@@ -555,11 +559,16 @@ class SchedulesController extends Controller {
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post())) {
-
+            $post = Yii::$app->request->post();
+            $status = $post['DbSchedules']['scr_completed_status'];
+//          print_r($status);exit;
             $model->admin_id = Yii::$app->user->identity->ParentAdminId;
             $model->schedule_date = (isset($model->schedule_date)) ? Yii::$app->formatter->asDate($model->schedule_date, 'php:Y-m-d') : "";
             $model->start_time = date('H:i:s', strtotime($model->start_time));
             $model->end_time = date('H:i:s', strtotime($model->end_time));
+            $time1 = strtotime($model->start_time);
+            $time2 = strtotime($model->end_time);
+            $model->hours = round(abs($time2 - $time1) / 3600, 2);
 
             if ($model->validate()) {
                 $stdcrsid = $model->stdcrsid;
@@ -567,6 +576,7 @@ class SchedulesController extends Controller {
                 $model->location_id = ($model->schedule_type == 2) ? $model->location_id : 0;
                 $model->updated_by = Yii::$app->user->identity->id;
                 $model->updated_at = date("Y-m-d H:i:s");
+                $model->scr_completed_status = $status;
                 $model->save();
 
                 if ($stdcrsid != "") {
@@ -580,7 +590,7 @@ class SchedulesController extends Controller {
                 }
 
                 \Yii::$app->getSession()->setFlash('success', 'Schedule infos updated successfully!!!');
-                return $this->redirect(['index']);
+                return $this->redirect(['view', 'id' => $model->schedule_id]);
             } else {
                 //print_r($model->errors);exit;
             }
