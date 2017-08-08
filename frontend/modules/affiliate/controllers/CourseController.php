@@ -2,7 +2,9 @@
 
 namespace frontend\modules\affiliate\controllers;
 
+use common\models\DbSchedulesSearch;
 use common\models\DlStudent;
+use common\models\DlStudentCourse;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -19,7 +21,7 @@ class CourseController extends Controller {
                 'class' => AccessControl::className(),
                 'rules' => [
                     [
-                        'actions' => ['index'],
+                        'actions' => ['index','view'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -36,6 +38,17 @@ class CourseController extends Controller {
         $model = $this->findStudent(Yii::$app->user->identity->student_id);
 
         return $this->render('index', compact('model'));
+      }
+      public function actionView() {
+          
+        $students_info = DlStudentCourse::find()->Where(['student_id' => Yii::$app->user->identity->student_id])->one();
+         $searchModel = new DbSchedulesSearch();
+        $dataProvider = $searchModel->courselist(Yii::$app->request->queryParams, $students_info->scr_id);
+        return $this->render('view', [
+                    'dataProvider' => $dataProvider,
+        ]);
+        
+        return $this->render('view', compact('model'));
       }
 
     protected function findStudent($id) {

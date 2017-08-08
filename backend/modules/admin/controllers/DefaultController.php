@@ -8,7 +8,6 @@ use common\models\DlAdminLessons;
 use common\models\DlInsAvailableDays;
 use common\models\DlInstructors;
 use common\models\DlSettings;
-use common\models\DlStudentCourse;
 use Yii;
 use yii2fullcalendar\models\Event as Event2;
 use yii\filters\AccessControl;
@@ -61,23 +60,25 @@ class DefaultController extends Controller {
         $schedule_count = DbSchedules::find()->count();
 
         /* Calender Display */
-        $students_schedules = DlStudentCourse::find()->where([
+        $students_schedules = DbSchedules::find()->where([
                     'admin_id' => $adminid,
-                    'scr_paid_status' => 1,
+                    'status' => 1, 
                 ])->andWhere(['!=', 'schedule_id', 0])->all();
 
         $events = array();
 
         foreach ($students_schedules AS $sinfo) {
-            if(isset($sinfo->schedule)){
-                $sch_strt = $sinfo->schedule->schedule_date . ' ' . $sinfo->schedule->start_time;
-                $sch_end = $sinfo->schedule->schedule_date . ' ' . $sinfo->schedule->end_time;
-                $stime = date('h:i a', strtotime($sinfo->schedule->start_time));
-                $etime = date('h:i a', strtotime($sinfo->schedule->end_time));
+           
+            if(isset($sinfo->dlStudentCourses)){
+                $sch_strt = $sinfo->schedule_date . ' ' . $sinfo->start_time;
+              
+                $sch_end = $sinfo->schedule_date . ' ' . $sinfo->end_time;
+                $stime = date('h:i a', strtotime($sinfo->start_time));
+                $etime = date('h:i a', strtotime($sinfo->end_time));
                 $Event = new Event2();
                 $Event->id = "Stud" . $sinfo->schedule_id;
-                $Event->title = "<div class='sched_info'>Stud: " . $sinfo->Studentname . "<br> Ins: " . $sinfo->Instructorname . "<br> " . $stime . " - " . $etime."</div>";
-                $Event->description = $sinfo->scheduleinfo;
+                $Event->title = "<div class='sched_info'>Stud: " . $sinfo->dlStudentCourses->Studentname . "<br> Ins: " . $sinfo->dlStudentCourses->Instructorname . "<br> " . $stime . " - " . $etime."</div>";
+                $Event->description = $sinfo->dlStudentCourses->scheduleinfo;
                 $Event->start = $sch_strt;
                 $Event->end = $sch_end;
                 $Event->color = '#932AB6';

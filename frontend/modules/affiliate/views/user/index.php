@@ -100,6 +100,9 @@ $this->title = "My Account";
     <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 myaccount-relist">
         <a href="<?php echo Url::toRoute('payment/index'); ?>">Payment Details</a>
     </div>
+    <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 myaccount-relist">
+        <a href="<?php echo Url::toRoute('course/view'); ?>">View Schedule Details</a>
+    </div>
     <?php
     if($facebook_url!=""){?>
     <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 myaccount-relist">

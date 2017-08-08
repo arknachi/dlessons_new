@@ -1,6 +1,7 @@
 <?php
 
-use common\components\Myclass;
+use common\models\DbSchedules;
+use common\models\DlLessons;
 use common\models\DlStudent;
 use common\models\DlStudentCourse;
 use yii\data\ActiveDataProvider;
@@ -24,26 +25,26 @@ use yii\widgets\ActiveForm;
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
             'lesson.lesson_name',
-            [
-                'header' => 'Schedule Status',
-                'attribute' => 'schedule_id',
-                'format' => 'raw',
-                'value' => function ($scmodel) {
-                    return ($scmodel->schedule_id == "0") ? '<span class="label label-danger">Not Assigned</span>' : '<span class="label label-success">Assigned</span>';
-                },
-            ],
-            [
-                'attribute' => 'schedule.schedule_date',
-                'format' => ['date', 'php:m-d-Y'],
-                'options' => ['width' => '10%'],
-            ],
-            [
-                'header' => 'Instructor',
-                'attribute' => 'schedule.instructor.first_name',
-                'value' => function ($scmodel) {
-                    return ($scmodel->schedule_id != "0") ? $scmodel->schedule->instructor->first_name . " " . $scmodel->schedule->instructor->last_name : "-";
-                },
-            ],
+//            [
+//                'header' => 'Schedule Status',
+//                'attribute' => 'schedule_id',
+//                'format' => 'raw',
+//                'value' => function ($scmodel) {
+//                    return ($scmodel->schedule_id == "0") ? '<span class="label label-danger">Not Assigned</span>' : '<span class="label label-success">Assigned</span>';
+//                },
+//            ],
+//            [
+//                'attribute' => 'schedule.schedule_date',
+//                'format' => ['date', 'php:m-d-Y'],
+//                'options' => ['width' => '10%'],
+//            ],
+//            [
+//                'header' => 'Instructor',
+//                'attribute' => 'schedule.instructor.first_name',
+//                'value' => function ($scmodel) {
+//                    return ($scmodel->schedule_id != "0") ? $scmodel->schedule->instructor->first_name . " " . $scmodel->schedule->instructor->last_name : "-";
+//                },
+//            ],
             [
                 'attribute' => 'scr_registerdate',
                 'format' => ['date', 'php:m-d-Y'],
@@ -72,6 +73,48 @@ use yii\widgets\ActiveForm;
                     return ($scmodel->additional_infos != "") ? $scmodel->additional_infos : "";
                 },
             ],
+                         [
+                'header' => 'Total Hours',
+                'attribute' => 'lesson.hours',
+            ],
+             [
+                'header' => 'Remaining Hours',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    $studcrid = $model->scr_id;
+                    $remainings = DbSchedules::find()->where('scr_id = :tour_id and scr_completed_status != :id and isDeleted = :delval', ['tour_id' => $studcrid, 'id' => 2, 'delval'=>'0'])->all();
+                    $sum = 0;
+                    foreach ($remainings as $remaining) {
+                        $sum += $remaining->hours;
+                    }
+                    $les_info = DlLessons::find()->Where([
+                                'lesson_id' => $model->lesson_id,])->one();
+                    $totalh = $les_info->hours;
+                    $different = abs($les_info->hours - $sum);
+                    return $different;
+                },
+            ],
+                         [
+                'attribute' => 'Overall Status',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    if ($model->schedule_id) {
+
+//                        $schedule_count = DbSchedules::find()->where('scr_id = :tour_id and scr_completed_status = :id', ['tour_id' => $model->scr_id, 'id' => 0])->count();
+//
+//                        $scmodel = DlStudentCourse::find()->where(['scr_id' => $model->scr_id])->one();
+//                        if ($schedule_count) {
+                        if($model->scr_completed_status =='0'){
+                            $sc_stat = '<span title="Click to change the schedule status" class="label label-danger">Not yet complete</span>';
+                        }else{
+                            $sc_stat = '<span class="label label-success">Completed</span>';
+                        }
+
+
+                        return $sc_stat;
+                    }
+                },
+            ],
             [
                 'attribute' => 'scr_paid_status',
                 'format' => 'raw',
@@ -79,52 +122,59 @@ use yii\widgets\ActiveForm;
                     return ($scmodel->scr_paid_status == "0") ? '<span class="label label-danger">Pending</span>' : '<span class="label label-success">Paid</span>';
                 },
             ],
-            [
-                'attribute' => 'scr_completed_date',
-                'format' => 'raw',
-                'value' => function ($scmodel) {
-                    return ($scmodel->scr_completed_date != "") ? Myclass::dateformat($scmodel->scr_completed_date) : '';
-                },
-            ],
+//            [
+//                'attribute' => 'scr_completed_date',
+//                'format' => 'raw',
+//                'value' => function ($scmodel) {
+//                    return ($scmodel->scr_completed_date != "") ? Myclass::dateformat($scmodel->scr_completed_date) : '';
+//                },
+//            ],
             //  'scr_certificate_serialno',            
-            [
-                'attribute' => 'scr_completed_status',
-                'format' => 'raw',
-                'value' => function ($scmodel) {
-                    if ($scmodel->schedule_id>0) {                       
-                            if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "1") {
-                                $sc_stat = '<span class="label label-success">Completed</span>';
-                            } else if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "0") {
-                                $url = "javascript:void(0)";
-                                $icondisp = '<span title="Click to change the schedule status" class="label label-danger">Not yet complete</span>';                                
-                                $sc_stat  = "<div id='stat_flag_" . $scmodel->scr_id . "'>" . Html::a($icondisp, $url, [
-                                            'class' => 'scstatus',
-                                            'data' => [
-                                                'id' => $scmodel->scr_id,
-                                            ],
-                                        ]) . "</div>";
-                            }
-                        } else {
-                            $sc_stat = '<span class="label label-danger">Not yet complete</span>';
-                        }
-
-                        return $sc_stat;                    
-                },
-            ],
+//            [
+//                'attribute' => 'scr_completed_status',
+//                'format' => 'raw',
+//                'value' => function ($scmodel) {
+//                    if ($scmodel->schedule_id>0) {                       
+//                            if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "1") {
+//                                $sc_stat = '<span class="label label-success">Completed</span>';
+//                            } else if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "0") {
+//                                $url = "javascript:void(0)";
+//                                $icondisp = '<span title="Click to change the schedule status" class="label label-danger">Not yet complete</span>';                                
+//                                $sc_stat  = "<div id='stat_flag_" . $scmodel->scr_id . "'>" . Html::a($icondisp, $url, [
+//                                            'class' => 'scstatus',
+//                                            'data' => [
+//                                                'id' => $scmodel->scr_id,
+//                                            ],
+//                                        ]) . "</div>";
+//                            }
+//                        } else {
+//                            $sc_stat = '<span class="label label-danger">Not yet complete</span>';
+//                        }
+//
+//                        return $sc_stat;                    
+//                },
+//            ],
             [
                 'class' => 'yii\grid\ActionColumn',
-                'template' => '{schedules_assign}',
+                'template' => '{schedules_assign}&nbsp;&nbsp;{view}&nbsp;&nbsp;{add}',
                 'buttons' => [
+                  
+                     'view' => function ($url, $model) {
+                        $url = Url::toRoute('schedules/view?id='.$model->scr_id);
+                        return Html::a('<span title="Student Detailed Information"  class="glyphicon glyphicon-eye-open"></span>', $url);
+                    },
                     'schedules_assign' => function ($url, $scmodel) {
-                        if ($scmodel->schedule_id == 0 && $scmodel->scr_paid_status == 1) {
+//                        print_r($scmodel->schedule_id);exit;
+                        if ($scmodel->scr_paid_status == 1 && $scmodel->scr_completed_status==0) {
                             $url = Url::toRoute(['schedules/create', 'scr_id' => $scmodel->scr_id, 'lesson_id' => $scmodel->lesson_id]);
                             $icondisp = '<span title="Assign Student to Schedule" class="fa fa-group"></span>';
                             return Html::a($icondisp, $url);
-                        } else if ($scmodel->schedule_id > 0) {
-                            $url = Url::toRoute('schedules/scheduledstudents?id=' . $scmodel->schedule_id);
-                            $icondisp = '<span title="Scheduled Students" class="fa fa-list"></span>';
-                            return Html::a($icondisp, $url);
                         }
+//                        else if ($scmodel->schedule_id > 0&& $scmodel->scr_paid_status == 1) {
+//                            $url = Url::toRoute('schedules/scheduledstudents?id=' . $scmodel->schedule_id);
+//                            $icondisp = '<span title="Scheduled Students" class="fa fa-list"></span>';
+//                            return Html::a($icondisp, $url);
+//                        }
                     },
                 ],
             ],
