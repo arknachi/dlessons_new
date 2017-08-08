@@ -236,5 +236,45 @@ class DbSchedulesSearch extends DbSchedules {
 
         return $dataProvider;
     }
+    
+    public function courselist($params,$studcrid) {
+        $query = DbSchedules::find();
+//        $adminid = Yii::$app->user->identity->ParentAdminId;
+        $query->where('scr_id ='.$studcrid);
+        $query->andWhere('isDeleted=0');
+
+        // add conditions that should always apply here
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+            'sort' => ['defaultOrder' => ['schedule_date' => SORT_DESC]]
+        ]);
+
+        $this->load($params);
+
+        if (!$this->validate()) {
+            // uncomment the following line if you do not want to return any records when validation fails
+            // $query->where('0=1');
+            return $dataProvider;
+        }
+
+        // grid filtering conditions
+        $query->andFilterWhere([
+             'admin_id' => $this->admin_id,
+            'schedule_id' => $this->schedule_id,
+            'lesson_id' => $this->lesson_id,
+            'instructor_id' => $this->instructor_id,
+            'schedule_date' => $this->schedule_date,
+            'start_time' => $this->start_time,
+            'end_time' => $this->end_time,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'created_by' => $this->created_by,
+            'updated_by' => $this->updated_by,
+            'status' => $this->status
+        ]);
+
+        return $dataProvider;
+    }
 
 }
