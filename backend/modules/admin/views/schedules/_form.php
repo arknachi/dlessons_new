@@ -55,6 +55,12 @@ $form = ActiveForm::begin([
         </div>
     </div>
 
+    <div id="error_scheduleid">            
+        <div class="alert alert-danger alert-dismissable">              
+            Schedule hour is lesser than the times you selected.Please select different time for this lesson.
+        </div>
+    </div>
+
 
     <?php if (!$model->isNewRecord) { ?>
         <?= $form->field($model, 'schedule_date')->textInput(['class' => 'form-control datepicker']) ?>   
@@ -101,7 +107,7 @@ $form = ActiveForm::begin([
         echo $form->field($model, 'schedule_type')->dropDownList([1 => 'Pickup', 2 => 'Office'], ['class' => 'form-control schedule_type'])->label('Type')
         ?>
 
-    <div class="location_id" style="display: none;">
+        <div class="location_id" style="display: none;">
             <?php
             echo $form->field($model, 'location_id')->dropDownList(ArrayHelper::map(DlLocations::find()->andWhere('admin_id = :adm_id', [':adm_id' => Yii::$app->user->identity->ParentAdminId])->all(), 'location_id', function($model, $defaultValue) {
                         return $model['address1'] . ',' . $model['city'] . ',' . $model['state'] . ',' . $model['country'] . ' - ' . $model['zip'];
@@ -196,7 +202,8 @@ $ins_si_callback = Yii::$app->urlManager->createUrl(['admin/schedules/ins_schedu
 $avai_ins_callback = Yii::$app->urlManager->createUrl(['admin/schedules/available_ins_info']);
 /* Check schedule exist of inbetween the schedule date, start and end time */
 $chckscheduleexist_callback = Yii::$app->urlManager->createUrl(['admin/schedules/chckscheduleexist']);
-
+/* Check schedule hours calculated using start and end time */
+$schedulehours_callback = Yii::$app->urlManager->createUrl(['admin/schedules/schedulehoursexist']);
 $script = <<< JS
       
     $(document).ready(function () { 
@@ -233,8 +240,31 @@ $script = <<< JS
         var stdcrsid = '{$model->stdcrsid}';
         
         $("#error_schedule").hide();
+         $("#error_scheduleid").hide();
+        
         $('#schedule-button').on('click', function() {
-            var testing = false;
+           var testing_hours = false;
+         $("#error_scheduleid").hide();
+        $.ajax({
+                url  : "{$schedulehours_callback}",
+                type : "POST", 
+                dataType: 'json',  
+                async: false,
+                data: $('.form-group input[type=\'text\'], .form-group input[type=\'hidden\'] , .form-group select'),
+                success: function(data) {
+                 if(data.leadsCount==1){
+                    testing_hours = true;                    
+                  }else{                
+                     $("#error_scheduleid").show();   
+                  }  
+                }
+           });
+           return testing_hours;    
+         }); 
+        
+                
+           $('#schedule-button').on('click', function() {
+         var testing = false;
             $("#error_schedule").hide();
             $.ajax({
                 url  : "{$chckscheduleexist_callback}",
@@ -252,6 +282,7 @@ $script = <<< JS
            });
            return testing;    
         }); 
+           
                 
         initdatepicker(); 
         $("body").on('change',".schedule_type",function(){

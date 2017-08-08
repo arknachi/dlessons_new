@@ -93,7 +93,7 @@ class DbSchedulesSearch extends DbSchedules {
      public function search($params) {
         $query = DbSchedules::find();
         $query->groupBy('scr_id');
-        $query->andWhere('isDeleted=0');
+
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
@@ -132,7 +132,7 @@ class DbSchedulesSearch extends DbSchedules {
         $query = DbSchedules::find();
         $adminid = Yii::$app->user->identity->ParentAdminId;
         $query->where('scr_id ='.$studcrid);
-        $query->andWhere('isDeleted=0');
+          $query->where('isDeleted =0');
 
         // add conditions that should always apply here
 

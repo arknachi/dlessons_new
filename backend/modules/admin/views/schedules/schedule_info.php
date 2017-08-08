@@ -53,13 +53,7 @@ use yii\widgets\ActiveForm;
                     return date('h:i a', strtotime($model->end_time));
                 },
             ],
-            [
-                'attribute' => 'hours',
-                'format' => 'raw',
-                'value' => function ($model) {
-                    return $model->hours;
-                },
-            ],
+          
             [
                 'attribute' => 'sch_status',
                 'format' => 'raw',
@@ -79,7 +73,7 @@ use yii\widgets\ActiveForm;
                                             ],
                                         ]) . "</div>";
                             }else if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "2") {
-                             $sc_stat = '<span class="label label-info">Cancelled</span>';
+                             $sc_stat = '<span class="label label-success">Cancelled</span>';
                         }
                         } else {
                             $sc_stat = '<span class="label label-danger">Not yet complete</span>';
@@ -99,23 +93,25 @@ use yii\widgets\ActiveForm;
 //                    },
                       'update' => function ($url, $model) {
 //                        $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
-                       if ($model->scr_completed_status==0) {
+                       if ($model->scr_completed_status!=1) {
                                 $url = Url::toRoute('schedules/update?id=' . $model->schedule_id);
-                                return Html::a('<span class="glyphicon glyphicon-pencil"></span>', $url);
+                                return Html::a('<span class="glyphicon glyphicon-pencil"></span>', $url, ['id' => "updateicon_" .  $model->scr_id]);
                         }
                     },
                     'delete' => function ($url, $model) {
 //                        $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
-                        if ($model->scr_completed_status==0) {
+                        if ($model->scr_completed_status!=1) {
                                 return Html::a('<span class="glyphicon glyphicon-trash" title="Delete"></span>', ['schedules/delete', 'id' => $model->schedule_id], ['id' => "deleteicon_" . $model->schedule_id, "data-pjax" => 0, 'onClick' => 'return confirm("Are you sure you want to delete this schedule?") ', "data-method" => "post"]);
                         }
                     },
-                    'scheduled_students' => function ($url, $model) {
-                        if ($model->schedule_id) {
-                            $url = Url::toRoute('schedules/scheduledstudents?id=' . $model->schedule_id);
-                            return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-tasks"></span>', $url);
-                        }
-                    },
+//                    'scheduled_students' => function ($url, $model) {
+//                          $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
+//                        if ($scmodel) {
+//                        $url = Url::toRoute('schedules/scheduledstudents?id=' . $model->schedule_id);
+//                        return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-tasks"></span>', $url);
+//                    
+//                        }
+//                        },
                 ],
             ],
         ],

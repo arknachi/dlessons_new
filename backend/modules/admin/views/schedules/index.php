@@ -41,8 +41,10 @@ $this->params['breadcrumbs'][] = $this->title;
              [
                 'attribute' => 'Student Name',
                 'format' => 'raw',
-                'value' => function ($model) {                    
+                'value' => function ($model) {     
+        if($model->dlStudentCourses){
                         return $model->dlStudentCourses->student->first_name.' '.$model->dlStudentCourses->student->last_name;
+        }
                 },
             ],
             [
@@ -77,14 +79,16 @@ $this->params['breadcrumbs'][] = $this->title;
 //
 //                        $scmodel = DlStudentCourse::find()->where(['scr_id' => $model->scr_id])->one();
 //                        if ($schedule_count) {
+                         if($model->dlStudentCourses){
                         if($model->dlStudentCourses->scr_completed_status =='0'){
                             $sc_stat = '<span title="Click to change the schedule status" class="label label-danger">Not yet complete</span>';
                         }else{
                             $sc_stat = '<span class="label label-success">Completed</span>';
                         }
 
-
+                         
                         return $sc_stat;
+                         }
                     }
                 },
             ],
@@ -100,13 +104,21 @@ $this->params['breadcrumbs'][] = $this->title;
                         $url = Url::toRoute('schedules/view?id='.$model->scr_id);
                         return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-tasks"></span>', $url);
                     },
-                    'delete' => function ($url, $model) {
-                        if ($model->dlStudentCourses->scr_paid_status == "1" && $model->dlStudentCourses->scr_completed_status == "1") {
-                               return "";
-                           } else {
-                               return Html::a('<span class="glyphicon glyphicon-trash" title="Delete"></span>', ['schedules/deleteSCR', 'id' => $model->scr_id], ['id' => "deleteicon_" . $model->scr_id, "data-pjax" => 0, 'onClick' => 'return confirm("Are you sure you want to delete this schedule?") ', "data-method" => "post"]);
+                  'delete' => function($url, $model) {
+                         if($model->dlStudentCourses){
+                        if ($model->dlStudentCourses->scr_paid_status == "1" && $model->dlStudentCourses->scr_completed_status == "0") {
+                            return Html::a('<span class="glyphicon glyphicon-trash"></span>', ['schedules/deleteall', 'id' => $model->scr_id], [
+                                        'class' => '',
+                                        'data' => [
+                                            'confirm' => 'Are you sure you want to delete this schedule?',
+                                            'method' => 'post',
+                                        ],
+                            ]);
+                        }  
                            }
-                    },
+                  },
+                            
+                            
 //                    'scheduled_students' => function ($url, $model) {
 //                        $url = Url::toRoute('schedules/scheduledstudents?id=' . $model->schedule_id);
 //                        return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-tasks"></span>', $url);
