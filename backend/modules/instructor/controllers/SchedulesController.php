@@ -89,8 +89,8 @@ class SchedulesController extends Controller {
         $scrsmodel = DlStudentCourse::find()->where([
                     'lesson_id' => $lesson_id,
                     'admin_id' => $admid,
-                    'schedule_id' => $id,
-                    'scr_paid_status' => 1
+                    'scr_paid_status' => 1,
+             'scr_id' => $schedulemodel->scr_id,
                 ])->one();
 
         return $this->render('schedule_students', [

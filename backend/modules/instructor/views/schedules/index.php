@@ -31,20 +31,12 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
             'lesson.lesson_name',
             [
-                'attribute' => 'stdcrsid',
+                'attribute' => 'Student Name',
                 'format' => 'raw',
-                'value' => function ($model) {
-                    if ($model->schedule_id) {
-                        $students_info = ArrayHelper::map(DlStudentCourse::find()->where([
-                                            'lesson_id' => $model->lesson_id,
-                                            'admin_id' => $model->admin_id,
-                                            'schedule_id' => $model->schedule_id,
-                                            'scr_paid_status' => 1
-                                        ])->all(), "schedule_id", function($model, $defaultValue) {
-                                            return $model->student->first_name . " " . $model->student->last_name;
-                                        });
-                        return isset($students_info[$model->schedule_id]) ? $students_info[$model->schedule_id] : "";
-                    }
+                'value' => function ($model) {     
+        if($model->dlStudentCourses){
+                        return $model->dlStudentCourses->student->first_name.' '.$model->dlStudentCourses->student->last_name;
+        }
                 },
             ],
             'schedule_date:date',
@@ -93,8 +85,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 'template' => '{scheduled_students}&nbsp;&nbsp;{update}&nbsp;&nbsp;&nbsp;{delete}',
                 'buttons' => [
                     'scheduled_students' => function ($url, $model) {
-                        $url = Url::toRoute('schedules/scheduledstudents?id=' . $model->schedule_id);
-                        return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-tasks"></span>', $url);
+                    if ($model->schedule_id) {
+                    $url = Url::toRoute('schedules/scheduledstudents?id=' . $model->schedule_id);
+                    return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-tasks"></span>', $url);
+                    }
+                    
                     },
                     'update' => function ($url, $model) {
                         $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();

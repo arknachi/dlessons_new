@@ -4,7 +4,6 @@ namespace backend\modules\instructor\controllers;
 
 use common\models\DbSchedules;
 use common\models\DlInstructors;
-use common\models\DlStudentCourse;
 use Yii;
 use yii2fullcalendar\models\Event as Event2;
 use yii\filters\AccessControl;
@@ -45,31 +44,35 @@ class DefaultController extends Controller {
 
     public function actionIndex() {
         $schedule_count = DbSchedules::find()->where(['instructor_id' => Yii::$app->user->getId()])->count();
-
+       
+//        $adminid=Yii::$app->user->identity->adminid;
         /* Calender Display */
-        $students_schedules = DlStudentCourse::find()->joinWith(['schedule'])->where([
-                    'db_schedules.instructor_id' => Yii::$app->user->getId(),
-                    'scr_paid_status' => 1,
-                ])->andWhere(['!=', 'dl_student_course.schedule_id', 0])->all();
-
+        $students_schedules = DbSchedules::find()->where([
+//                   'admin_id' => $adminid,
+                    'status' => 1, 
+            'instructor_id' => Yii::$app->user->getId(),
+                ])->andWhere(['!=', 'schedule_id', 0])->all();
+//        echo '<pre>';print_r($students_schedules);exit;
         $events = array();
 
         foreach ($students_schedules AS $sinfo) {
-            $sch_strt = $sinfo->schedule->schedule_date . ' ' . $sinfo->schedule->start_time;
-            $sch_end = $sinfo->schedule->schedule_date . ' ' . $sinfo->schedule->end_time;
+            if(isset($sinfo->dlStudentCourses)){
+            $sch_strt = $sinfo->schedule_date . ' ' . $sinfo->start_time;
+            $sch_end = $sinfo->schedule_date . ' ' . $sinfo->end_time;
 
-            $stime = date('h:i a', strtotime($sinfo->schedule->start_time));
-            $etime = date('h:i a', strtotime($sinfo->schedule->end_time));
+            $stime = date('h:i a', strtotime($sinfo->start_time));
+            $etime = date('h:i a', strtotime($sinfo->end_time));
             
             $Event = new Event2();
             $Event->id = $sinfo->schedule_id;
-            $Event->title = $sinfo->Studentname."<br> ".$stime." - ".$etime;
-            $Event->description = $sinfo->scheduleinfo;
+            $Event->title = $sinfo->dlStudentCourses->Studentname."<br> ".$stime." - ".$etime;
+            $Event->description = $sinfo->dlStudentCourses->scheduleinfo;
             $Event->start = $sch_strt;
             $Event->end = $sch_end;
             $Event->color = '#932AB6';
             $Event->url = Url::toRoute(['schedules/scheduledstudents', 'id' => $sinfo->schedule_id]);
             $events[] = $Event;
+            }
         }
 
         return $this->render('index', [

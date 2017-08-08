@@ -25,14 +25,17 @@ $this->params['breadcrumbs'][] = $this->title;
         <p><strong>Location Info</strong> : <?php echo $model->locationaddress;?></p>
         <?php } 
         
-         if($scrsmodel->scr_completed_status==0){ 
+         if($model->scr_completed_status==0){ 
              echo "<h3>Schedule Status : Pending</h3>";
          }
          
-        if($scrsmodel->scr_completed_status==1){ 
+        if($model->scr_completed_status==1){ 
             echo "<h3>Schedule Status : Completed </h3>";
             echo "<h3>Course Completed Date : ". Yii::$app->myclass->date_dispformat($scrsmodel->scr_completed_date)."</h3>";
         }     
+        if($model->scr_completed_status==2){ 
+             echo "<h3>Schedule Status : Cancelled</h3>";
+         }
         ?>    
             
             <?php
@@ -53,19 +56,22 @@ $this->params['breadcrumbs'][] = $this->title;
                         [
                             'label' => 'Date Of Birth',
                             'format' => 'raw',
-                            'value' => ($scrsmodel->student->studentProfile->dob!="")? Yii::$app->myclass->date_dispformat($scrsmodel->student->studentProfile->dob):"",
-                        ],
+                            'value' => 
+                            ($scrsmodel->student->studentProfile->dob!="")? Yii::$app->myclass->date_dispformat($scrsmodel->student->studentProfile->dob):"",
+                                    ],
                         'student.studentProfile.permit_num',
                         [
                             'label' => 'Language',
                             'format' => 'raw',
-                            'value' => ($scrsmodel->student->studentProfile->language!="")?$lang[$scrsmodel->student->studentProfile->language]:"",
-                        ],
+                            'value' =>
+                            ($scrsmodel->student->studentProfile->language!="")?$lang[$scrsmodel->student->studentProfile->language]:"",
+                                    ],
                         [
                             'label' => 'hear about this',
                             'format' => 'raw',
-                            'value' => ($scrsmodel->student->studentProfile->hear_about_this!="")?$hear[$scrsmodel->student->studentProfile->hear_about_this]:"",
-                        ],  
+                            'value' => 
+                            ($scrsmodel->student->studentProfile->hear_about_this!="")?$hear[$scrsmodel->student->studentProfile->hear_about_this]:"",
+                                    ],  
                         'student.studentProfile.referred_by', 
                     ],
                 ]) ?>
