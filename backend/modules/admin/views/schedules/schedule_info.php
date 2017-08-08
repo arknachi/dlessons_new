@@ -17,12 +17,12 @@ use yii\widgets\ActiveForm;
 <div class="dl-student-form">
     <?php
 //    print_r($dataProvider);exit;
-       echo   GridView::widget([
-         'dataProvider' => $dataProvider,
+    echo GridView::widget([
+        'dataProvider' => $dataProvider,
         // 'filterModel' => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
-             'instructor.fullname',
+            'instructor.fullname',
 //             [
 //                'attribute' => 'schedule_type',
 //                'format' => 'raw',
@@ -34,12 +34,12 @@ use yii\widgets\ActiveForm;
 //                    }
 //                },
 //            ],
-           [
+            [
                 'attribute' => 'schedule_date',
                 'format' => ['date', 'php:m-d-Y'],
                 'options' => ['width' => '10%'],
             ],
-             [
+            [
                 'attribute' => 'start_time',
                 'format' => 'raw',
                 'value' => function ($model) {
@@ -53,7 +53,13 @@ use yii\widgets\ActiveForm;
                     return date('h:i a', strtotime($model->end_time));
                 },
             ],
-          
+            [
+                'attribute' => 'hours',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    return $model->hours;
+                },
+            ],
             [
                 'attribute' => 'sch_status',
                 'format' => 'raw',
@@ -61,7 +67,7 @@ use yii\widgets\ActiveForm;
                     if ($model->schedule_id) {
                         $scmodel = DlStudentCourse::find()->where(['scr_id' => $model->scr_id])->one();
                         if ($scmodel) {
-                            if ($scmodel->scr_paid_status == "1" &&$model->scr_completed_status == "1") {
+                            if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "1") {
                                 $sc_stat = '<span class="label label-success">Completed</span>';
                             } else if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "0") {
                                 $url = "javascript:void(0)";
@@ -72,9 +78,9 @@ use yii\widgets\ActiveForm;
                                                 'id' => $scmodel->scr_id,
                                             ],
                                         ]) . "</div>";
-                            }else if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "2") {
-                             $sc_stat = '<span class="label label-success">Cancelled</span>';
-                        }
+                            } else if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "2") {
+                                $sc_stat = '<span class="label label-info">Cancelled</span>';
+                            }
                         } else {
                             $sc_stat = '<span class="label label-danger">Not yet complete</span>';
                         }
@@ -91,37 +97,41 @@ use yii\widgets\ActiveForm;
 //                        $url = Url::toRoute('schedules/assignstudents?id=' . $model->schedule_id);
 //                        return Html::a('<span title="Assign Students" class="fa fa-group"></span>', $url);
 //                    },
-                      'update' => function ($url, $model) {
+                    'update' => function ($url, $model) {
 //                        $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
-                       if ($model->scr_completed_status!=1) {
-                                $url = Url::toRoute('schedules/update?id=' . $model->schedule_id);
-                                return Html::a('<span class="glyphicon glyphicon-pencil"></span>', $url, ['id' => "updateicon_" .  $model->scr_id]);
+                        if ($model->scr_completed_status == 0) {
+                            $url = Url::toRoute('schedules/update?id=' . $model->schedule_id);
+                            return Html::a('<span class="glyphicon glyphicon-pencil"></span>', $url);
                         }
                     },
-                    'delete' => function ($url, $model) {
-//                        $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
-                        if ($model->scr_completed_status!=1) {
-                                return Html::a('<span class="glyphicon glyphicon-trash" title="Delete"></span>', ['schedules/delete', 'id' => $model->schedule_id], ['id' => "deleteicon_" . $model->schedule_id, "data-pjax" => 0, 'onClick' => 'return confirm("Are you sure you want to delete this schedule?") ', "data-method" => "post"]);
+                    'delete' => function($url, $model) {
+                        if ($model->scr_completed_status != 1) {
+                            return Html::a('<span class="glyphicon glyphicon-trash"></span>', ['schedules/delete', 'id' => $model->schedule_id], [
+                            'class' => '',
+                            'data' => [
+                            'confirm' => 'Are you sure you want to delete this schedule?',
+                            'method' => 'post',
+                            ],
+                            ]);
                         }
                     },
-//                    'scheduled_students' => function ($url, $model) {
-//                          $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
-//                        if ($scmodel) {
-//                        $url = Url::toRoute('schedules/scheduledstudents?id=' . $model->schedule_id);
-//                        return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-tasks"></span>', $url);
-//                    
-//                        }
-//                        },
-                ],
-            ],
+
+                    'scheduled_students' => function ($url, $model) {
+                    if ($model->schedule_id) {
+                    $url = Url::toRoute('schedules/scheduledstudents?id=' . $model->schedule_id);
+                    return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-tasks"></span>', $url);
+                }
+            },
         ],
-    ]);
-    ?>
+    ],
+],
+]);
+?>
 </div>
-    <?php
-    /* For update the status of the schedule */
-    $callback = Yii::$app->urlManager->createUrl(['admin/schedules/statusupdate']);
-    $script = <<< JS
+<?php
+/* For update the status of the schedule */
+$callback = Yii::$app->urlManager->createUrl(['admin/schedules/statusupdate']);
+$script = <<< JS
       
     jQuery(document).ready(function () { 
          $('.scstatus').on('click', function() {
@@ -147,5 +157,5 @@ use yii\widgets\ActiveForm;
          });
     });
 JS;
-    $this->registerJs($script, View::POS_END);
-    ?>
+$this->registerJs($script, View::POS_END);
+?>
