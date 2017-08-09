@@ -19,48 +19,48 @@ $this->params['breadcrumbs'][] = $this->title;
         'dataProvider' => $dataProvider,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
-            'student.username',
-            'student.first_name',
-            'student.last_name',
+            'username',
+            'first_name',
+            'last_name',
             [
-                'attribute' => 'student.studentProfile.dob',
+                'attribute' => 'dob',
                 'format' => ['date', 'php:m/d/Y'],
                 'options' => ['width' => '10%'],
             ],
-            'student.email:email',
+            'email:email',
             [
                 'header' => 'Payment Status',
                 'attribute' => 'scr_paid_status',
                 'format' => 'raw',
-                'value' => function ($model) {                    
-                     if($model->scr_paid_status == "0"){   
-                       $url = Url::to("/myaccount-autologin/".$model->student_id, true);
-                       $pflag = Html::a('<span class="label label-danger">Pay Now</span>', $url,["target"=>"_blank"]);  
-                     }else if($model->scr_paid_status == "1"){
+                'value' => function ($model) {
+                     if($model['scr_paid_status'] == "0"){
+                       $url = Url::to("/myaccount-autologin/".$model['student_id'], true);
+                       $pflag = Html::a('<span class="label label-danger">Pay Now</span>', $url,["target"=>"_blank"]);
+                     }else if($model['scr_paid_status'] == "1"){
                       $pflag = '<span class="label label-success">Paid</span>';
-                     }else if($model->scr_paid_status == "2"){
+                     }else if($model['scr_paid_status'] == "2"){
                       $pflag = '<span class="label label-danger">Pending</span>';
                      }
-                     
+
                      return $pflag;
                 },
             ],
-            'student.created_at',
+            'created_at',
             // 'updated_at',
             [
                 'class' => 'yii\grid\ActionColumn',
                 'template' => '{view}&nbsp;&nbsp;{update}&nbsp;&nbsp;&nbsp;{delete}',
                 'buttons' => [
                     'view' => function ($url, $model) {
-                        $url = Url::toRoute('students/view?id=' . $model->student_id."#tab_2");
+                        $url = Url::toRoute('students/view?id=' . $model['student_id']."#tab_2");
                         return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-eye-open"></span>', $url);
                     },
                     'update' => function ($url, $model) {
-                        $url = Url::toRoute('students/update?id=' . $model->student_id);
+                        $url = Url::toRoute('students/update?id=' . $model['student_id']);
                         return Html::a('<span title="Update Student Information" class="glyphicon glyphicon-pencil"></span>', $url);
                     },
                     'delete' => function ($url, $model) {
-                        return Html::a('<span class="glyphicon glyphicon-trash"></span>', ['delete', 'id' => $model->student_id], [
+                        return Html::a('<span class="glyphicon glyphicon-trash"></span>', ['delete', 'id' => $model['student_id']], [
                                     'class' => '',
                                     'data' => [
                                         'confirm' => 'Are you absolutely sure ? You will lose all the information about this user with this action.',

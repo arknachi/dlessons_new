@@ -57,7 +57,7 @@ $form = ActiveForm::begin([
                 <div class="col-lg-4 col-md-4">
                     <div class="form-group">
                         <?php //echo $form->field($model, 'student.studentProfile.dob');
-                        echo $form->field($model, 'searchstatus')->dropdownList(['1' => 'Not Assigned', '2' => 'Assigned', '3' => 'Registered (paid)', '4' => 'Registered (not paid)'], ['prompt' => 'All']);
+                        echo $form->field($model, 'searchstatus')->dropdownList(['1' => 'Not Assigned', '2' => 'Assigned (need to add remaining hours )', '5' => 'Assigned (no remaining hours )','3' => 'Registered (paid)', '4' => 'Registered (not paid)'], ['prompt' => 'All']);
                         ?>                  
                     </div>
                 </div>  
