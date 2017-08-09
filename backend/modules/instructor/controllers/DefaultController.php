@@ -49,8 +49,9 @@ class DefaultController extends Controller {
         /* Calender Display */
         $students_schedules = DbSchedules::find()->where([
 //                   'admin_id' => $adminid,
+                    'isDeleted'=>0,
                     'status' => 1, 
-            'instructor_id' => Yii::$app->user->getId(),
+                    'instructor_id' => Yii::$app->user->getId(),
                 ])->andWhere(['!=', 'schedule_id', 0])->all();
 //        echo '<pre>';print_r($students_schedules);exit;
         $events = array();

@@ -153,6 +153,7 @@ class DlStudentCourse extends ActiveRecord {
 
     public function getScheduleinfo() {
         $sphone = "";
+        if($this->schedule){
         if ($this->schedule->schedule_type == 1) {
             $type = " <span class='label label-success'>Pickup</span>";
             $address = $this->getStudentaddress();
@@ -167,17 +168,21 @@ class DlStudentCourse extends ActiveRecord {
             $type = " <span class='label label-success'>Office</span>";
             $address = $this->schedule->locationaddress;
         }
+        
         $sinfo = "<p><strong>Student Name :</strong> " . $this->student->first_name . " " . $this->student->last_name;
         $sinfo .= "<br><strong>Instructor :</strong> " . $this->schedule->instructor->first_name . " " . $this->schedule->instructor->last_name;
         $sinfo .= "<br><strong>Type :</strong> " . $type;
         $sinfo .= "<br><strong>Address :</strong> " . $address . $sphone . " </p>";
 
         return $sinfo;
+        }
     }
 
     public function getInstructorname() {
+        if($this->schedule){
         $sinfo = $this->schedule->instructor->first_name . " " . $this->schedule->instructor->last_name;
         return $sinfo;
+    }
     }
 
     public function getStudentname() {

@@ -48,6 +48,12 @@ $form = ActiveForm::begin([
             The schedule is busy during the times you selected.Please select different time for this lesson.
         </div>
     </div>
+     <div id="error_scheduleid">            
+        <div class="alert alert-danger alert-dismissable">              
+            Schedule hour is lesser than the times you selected.Please select different time for this lesson.
+        </div>
+    </div>
+    
     <?= $form->field($model, 'schedule_date')->textInput(['class' => 'form-control datepicker']) ?>  
     <?= $form->field($model, 'start_time')->textInput(['class' => 'form-control timepicker']) ?>
     <?= $form->field($model, 'end_time')->textInput(['class' => 'form-control timepicker']) ?>
@@ -69,15 +75,16 @@ $form = ActiveForm::begin([
             <div class="col-sm-5">
                 <div id="studinfo">
                     <?php
-                    $students_info = ArrayHelper::map(DlStudentCourse::find()->where([
+                   $students_info = ArrayHelper::map(DlStudentCourse::find()->where([
                                         'lesson_id' => $model->lesson_id,
                                         'admin_id' => $model->admin_id,
-                                        'schedule_id' => $model->schedule_id,
+//                                        'schedule_id' => $model->schedule_id,
+                                        'scr_id' => $model->scr_id,
                                         'scr_paid_status' => 1
-                                    ])->all(), "schedule_id", function($model, $defaultValue) {
+                                    ])->all(), "scr_id", function($model, $defaultValue) {
                                 return $model->studentinfo;
                             });
-                    echo isset($students_info[$model->schedule_id]) ? $students_info[$model->schedule_id] : "";
+                    echo isset($students_info[$model->scr_id]) ? $students_info[$model->scr_id] : "";
                     ?>    
                 </div>
             </div>
@@ -117,31 +124,58 @@ ActiveForm::end();
 $callback = Yii::$app->urlManager->createUrl(['instructor/schedules/unassignpaidstud']);
 /* Check schedule exist of inbetween the schedule date, start and end time */
 $chckscheduleexist_callback = Yii::$app->urlManager->createUrl(['instructor/schedules/chckscheduleexist']);
+/* Check schedule hours calculated using start and end time */
+$schedulehours_callback = Yii::$app->urlManager->createUrl(['instructor/schedules/schedulehoursexist']);
 $script = <<< JS
       
     jQuery(document).ready(function () { 
         var schedtype = '{$model->schedule_type}';
         var stdcrsid = '{$model->stdcrsid}';
         $("#error_schedule").hide();
+        
+         $("#error_scheduleid").hide();
+        
         $('#schedule-button').on('click', function() {
-            var testing = false;
-            $("#error_schedule").hide();
-            $.ajax({
-                url  : "{$chckscheduleexist_callback}",
+           var testing_hours = false;
+         $("#error_scheduleid").hide();
+        $.ajax({
+                url  : "{$schedulehours_callback}",
                 type : "POST", 
                 dataType: 'json',  
                 async: false,
                 data: $('.form-group input[type=\'text\'], .form-group input[type=\'hidden\'] , .form-group select'),
                 success: function(data) {
-                 if(data.leadsCount==0){
-                    testing = true;                    
+                 if(data.leadsCount==1){
+                    testing_hours = true;                    
                   }else{                
-                     $("#error_schedule").show();   
+                     $("#error_scheduleid").show();   
                   }  
+                
                 }
            });
-           return testing;    
-        });  
+           return testing_hours;    
+         }); 
+        
+        
+//        $('#schedule-button').on('click', function() {
+//            var testing = false;
+//            $("#error_schedule").hide();
+//            $.ajax({
+//                url  : "{$chckscheduleexist_callback}",
+//                type : "POST", 
+//                dataType: 'json',  
+//                async: false,
+//                data: $('.form-group input[type=\'text\'], .form-group input[type=\'hidden\'] , .form-group select'),
+//                success: function(data) {
+//                 if(data.leadsCount==0){
+//                    testing = true;                    
+//                  }else{                
+//                     $("#error_schedule").show();   
+//                  }  
+//                }
+//           });
+//           return testing;    
+//        });  
         
         $('#dbschedules-schedule_date').removeClass('hasDatepicker');
                 

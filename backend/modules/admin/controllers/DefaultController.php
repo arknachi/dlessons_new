@@ -61,6 +61,7 @@ class DefaultController extends Controller {
 
         /* Calender Display */
         $students_schedules = DbSchedules::find()->where([
+                    'isDeleted'=>0,
                     'admin_id' => $adminid,
                     'status' => 1, 
                 ])->andWhere(['!=', 'schedule_id', 0])->all();

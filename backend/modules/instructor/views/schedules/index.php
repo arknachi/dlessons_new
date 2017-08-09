@@ -58,11 +58,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'raw',
                 'value' => function ($model) {
                     if ($model->schedule_id) {
-                        $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
+                        $scmodel = DlStudentCourse::find()->where(['scr_id' => $model->scr_id])->one();
                         if ($scmodel) {
-                            if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "1") {
+                            if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "1") {
                                 $sc_stat = '<span class="label label-success">Completed</span>';
-                            } else if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "0") {
+                            } else if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "0") {
                                 $url = "javascript:void(0)";
                                 $icondisp = '<span title="Click to change the schedule status" class="label label-danger">Not yet complete</span>';
                                 $sc_stat = "<div id='stat_flag_" . $scmodel->scr_id . "'>" . Html::a($icondisp, $url, [
@@ -71,6 +71,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                                 'id' => $scmodel->scr_id,
                                             ],
                                         ]) . "</div>";
+                            } else if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "2") {
+                                $sc_stat = '<span class="label label-info">Cancelled</span>';
                             }
                         } else {
                             $sc_stat = '<span class="label label-danger">Not yet complete</span>';
@@ -92,7 +94,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     
                     },
                     'update' => function ($url, $model) {
-                        $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
+                        $scmodel = DlStudentCourse::find()->where(['scr_id' => $model->scr_id])->one();
                         if ($scmodel) {
                             if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "1") {
                                 return "";
@@ -108,7 +110,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                     },
                     'delete' => function ($url, $model) {
-                        $scmodel = DlStudentCourse::find()->where(['schedule_id' => $model->schedule_id])->one();
+                        $scmodel = DlStudentCourse::find()->where(['scr_id' => $model->scr_id])->one();
                         if ($scmodel) {
                             if ($scmodel->scr_paid_status == "1" && $scmodel->scr_completed_status == "1") {
                                 return "";

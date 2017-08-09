@@ -4,15 +4,12 @@ namespace backend\modules\instructor\controllers;
 
 use common\models\DbSchedules;
 use common\models\DbSchedulesSearch;
-use common\models\DlInsAvailableDays;
-use common\models\DlInstructors;
+use common\models\DlLessons;
 use common\models\DlStudentCourse;
 use Yii;
-use yii2fullcalendar\models\Event;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
-use yii\helpers\Url;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 
@@ -35,7 +32,7 @@ class SchedulesController extends Controller {
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['index', 'create', 'update', 'delete', 'view', 'scheduledstudents', 'statusupdate', 'unassignpaidstud', 'chckscheduleexist'],
+                        'actions' => ['index', 'create', 'update', 'delete', 'view', 'scheduledstudents', 'statusupdate', 'unassignpaidstud', 'chckscheduleexist', 'schedulehoursexist'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -117,39 +114,36 @@ class SchedulesController extends Controller {
      * @return mixed
      */
     public function actionCreate() {
-
-
         if (Yii::$app->user->identity->accessschedule) {
-
-
             $session = Yii::$app->session;
             $model = new DbSchedules();
             $model->setScenario('create');
 
             if ($model->load(Yii::$app->request->post())) {
-
                 $model->admin_id = Yii::$app->user->identity->adminid;
                 $model->schedule_date = (isset($model->schedule_date)) ? Yii::$app->formatter->asDate($model->schedule_date, 'php:Y-m-d') : "";
                 $model->start_time = date('H:i:s', strtotime($model->start_time));
                 $model->end_time = date('H:i:s', strtotime($model->end_time));
                 $model->isDeleted = 0;
                 $model->city_id = Yii::$app->user->identity->inscityid;
-
+                $time1 = strtotime($model->start_time);
+                $time2 = strtotime($model->end_time);
+                $model->hours = round(abs($time2 - $time1) / 3600);
                 if ($model->validate()) {
                     $stdcrsid = $model->stdcrsid;
-
+                    $model->scr_id=$stdcrsid;
                     $model->location_id = ($model->schedule_type == 2) ? $model->location_id : 0;
                     $model->created_by = Yii::$app->user->identity->id;
                     $model->created_at = date("Y-m-d H:i:s");
                     $model->updated_at = date("Y-m-d H:i:s");
                     $model->role = 2;
-
+                  
                     /* Add the schedule and Assign the schedule for the student course */
                     if ($model->save() && $stdcrsid != "") {
 
-                        $schedule_id = $model->schedule_id;
+//                        $schedule_id = $model->schedule_id;
                         $crsmodel = DlStudentCourse::findOne($stdcrsid);
-                        $crsmodel->schedule_id = $schedule_id;
+//                        $crsmodel->schedule_id = $schedule_id;
                         $crsmodel->save();
                     }
 
@@ -196,8 +190,8 @@ class SchedulesController extends Controller {
                 $query = DlStudentCourse::find()->andWhere([
                             'lesson_id' => $lesson_id,
                             'admin_id' => $adminid,
-                            'schedule_id' => "0",
-                            'scr_paid_status' => "1"
+                            'scr_paid_status' => "1",
+                            'scr_completed_status' => '0',
                         ])->all();
 
                 $students_list = ArrayHelper::map($query, "scr_id", function($model, $defaultValue) {
@@ -218,6 +212,79 @@ class SchedulesController extends Controller {
             }
         }
     }
+     public function actionSchedulehoursexist() {
+        $data['leadsCount'] = 0;
+       $stdcrsid= $_POST['DbSchedules']['stdcrsid'];
+        $lesson_id= $_POST['DbSchedules']['lesson_id'];
+        if($lesson_id != '' && $stdcrsid != ''){
+            $total_scheduled = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $stdcrsid, 'id' => 2, 'delval' => '0'])->sum('hours'));
+            $les_info = DlLessons::find()->select('hours')->Where(['lesson_id' => $lesson_id])->one();
+            $total_lessonhours = $les_info->hours; 
+            $remainings = $total_lessonhours - $total_scheduled;
+                  $start_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['start_time'])));
+                  $end_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['end_time'])));
+                   $different = $end_time - $start_time;
+                   if($remainings >= $different){
+                         $data['leadsCount'] = 1;
+                   }
+        }  else {
+       $crsmodel = DbSchedules::findOne($_POST['schedule_id']);
+       $total_scheduled = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $crsmodel ['scr_id'], 'id' => 2, 'delval' => '0'])->sum('hours'));
+       $les_info = DlLessons::find()->select('hours')->Where(['lesson_id' => $crsmodel ['lesson_id']])->one();
+            $total_lessonhours = $les_info->hours; 
+            $remainings = $total_lessonhours - $total_scheduled;
+                    $start_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['start_time'])));
+                  $end_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['end_time'])));
+                   $different = $end_time - $start_time;
+                   if($remainings >= $different){
+                         $data['leadsCount'] = 1;
+                   }
+              }
+             
+                 
+//            if(isset($_POST['scr_id'])){
+//                $current_scheduled_time = round(DbSchedules::find()->select('hours')->where('schedule_id = :tour_id', ['tour_id' => $_POST['schedule_id']])->sum('hours'));
+//                 
+//                foreach ($_POST['DbSchedules'] as $key=>$modelinfo) {
+//                    if($key == 'start_time'){
+//                        $start_time = abs(date('H:i:s', strtotime($modelinfo)));
+//                    }
+//                     if($key == 'end_time'){
+//                        $end_time = abs(date('H:i:s', strtotime($modelinfo)));
+//                    }
+//
+//                }
+//                $different = $end_time - $start_time;
+//                $summ = round($different - $current_scheduled_time);
+//            }else{
+//                foreach ($_POST['DbSchedules'] as $modelinfo) {
+//                        $start_time = abs(date('H:i:s', strtotime($modelinfo['start_time'])));
+//                        $end_time = abs(date('H:i:s', strtotime($modelinfo['end_time'])));
+//                        $different = $end_time - $start_time;
+//                        $summ += $different;
+//
+//                }
+//            }
+//            
+//            $c_hours = $summ + $total_scheduled;
+//            
+//            $data['lessonhours'] = $total_lessonhours;
+//            $data['scheduled'] = $total_scheduled;
+//            $data['remaining'] = $remainings;
+//            $data['formhour'] = $summ;
+//            $data['c_hours'] = $c_hours;
+//            
+//
+//            if ($total_lessonhours >= $c_hours ) {
+//                $data['leadsCount'] = 1;
+//            }
+//        }else{
+//            $data['leadsCount'] = 2;
+//        }
+        echo json_encode($data);
+        exit;
+    }
+
 
     public function actionChckscheduleexist() {
         $data['leadsCount'] = 0;
@@ -292,7 +359,9 @@ class SchedulesController extends Controller {
                 $model->schedule_date = (isset($model->schedule_date)) ? Yii::$app->formatter->asDate($model->schedule_date, 'php:Y-m-d') : "";
                 $model->start_time = date('H:i:s', strtotime($model->start_time));
                 $model->end_time = date('H:i:s', strtotime($model->end_time));
-
+                 $time1 = strtotime($model->start_time);
+                $time2 = strtotime($model->end_time);
+                $model->hours = round(abs($time2 - $time1) / 3600);
                 if ($model->validate()) {
                     $stdcrsid = $model->stdcrsid;
 
@@ -302,12 +371,12 @@ class SchedulesController extends Controller {
                     $model->save();
 
                     if ($stdcrsid != "") {
-                        $schedule_id = $model->schedule_id;
+//                        $schedule_id = $model->schedule_id;
 
-                        DlStudentCourse::updateAll(['schedule_id' => 0], "schedule_id = '" . $schedule_id . "'");
+//                        DlStudentCourse::updateAll(['schedule_id' => 0], "schedule_id = '" . $schedule_id . "'");
 
                         $crsmodel = DlStudentCourse::findOne($stdcrsid);
-                        $crsmodel->schedule_id = $schedule_id;
+//                        $crsmodel->schedule_id = $schedule_id;
                         $crsmodel->save();
                     }
 

@@ -66,7 +66,7 @@ $this->title = "View Schedule Details";
                                             ],
                                         ]) . "</div>";
                             }else if ($scmodel->scr_paid_status == "1" && $model->scr_completed_status == "2") {
-                             $sc_stat = '<span class="label label-success">Cancelled</span>';
+                             $sc_stat = '<span class="label label-info">Cancelled</span>';
                         }
                         } else {
                             $sc_stat = '<span class="label label-danger">Not yet complete</span>';

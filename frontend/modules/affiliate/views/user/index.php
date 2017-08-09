@@ -22,19 +22,19 @@ $this->title = "My Account";
             'columns' => [
                 ['class' => 'yii\grid\SerialColumn'],
                 'lesson.lesson_name',
-                [
-                    'header' => 'Schedule Status',
-                    'attribute' => 'schedule_id',
-                    'format' => 'raw',
-                    'value' => function ($scmodel) {
-                        return ($scmodel->schedule_id == "0") ? '<span class="label label-danger">Not Assigned</span>' : '<span class="label label-success">Assigned</span>';
-                    },
-                ],
-                [
-                    'attribute' => 'schedule.schedule_date',
-                    'format' => ['date', 'php:m/d/Y'],
-                    'options' => ['width' => '10%'],
-                ],
+//                [
+//                    'header' => 'Schedule Status',
+//                    'attribute' => 'schedule_id',
+//                    'format' => 'raw',
+//                    'value' => function ($scmodel) {
+//                        return ($scmodel->schedule_id == "0") ? '<span class="label label-danger">Not Assigned</span>' : '<span class="label label-success">Assigned</span>';
+//                    },
+//                ],
+//                [
+//                    'attribute' => 'schedule.schedule_date',
+//                    'format' => ['date', 'php:m/d/Y'],
+//                    'options' => ['width' => '10%'],
+//                ],
                 [
                     'attribute' => 'scr_registerdate',
                     'format' => ['date', 'php:m/d/Y'],
@@ -82,12 +82,23 @@ $this->title = "My Account";
                 ],
                 //  'scr_certificate_serialno',
                 [
+                    'header' => 'Over All Status',
                     'attribute' => 'scr_completed_status',
                     'format' => 'raw',
                     'value' => function ($scmodel) {
                         return ($scmodel->scr_completed_status == "0") ? '<span class="label label-danger">Not yet complete</span>' : '<span class="label label-success">Completed</span>';
                     },
-                ]
+                ],
+                            [
+                'class' => 'yii\grid\ActionColumn',
+                'template' => '{view}',
+                'buttons' => [
+                    'view' => function ($url, $model) {
+                        $url = Url::toRoute('course/view');
+                        return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-eye-open"></span>', $url);
+                    },
+                                    ],
+            ],
             ],
             'emptyText' => '-',
         ]);
@@ -100,10 +111,7 @@ $this->title = "My Account";
     <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 myaccount-relist">
         <a href="<?php echo Url::toRoute('payment/index'); ?>">Payment Details</a>
     </div>
-    <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 myaccount-relist">
-        <a href="<?php echo Url::toRoute('course/view'); ?>">View Schedule Details</a>
-    </div>
-    <?php
+       <?php
     if($facebook_url!=""){?>
     <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 myaccount-relist">
         <a target="_blank" href="<?php echo $facebook_url;?>">Like us on facebook</a>
