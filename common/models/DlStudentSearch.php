@@ -149,9 +149,9 @@ class DlStudentSearch extends DlStudent
                     ON c.scr_id = b.scr_id
                     JOIN dl_lessons d
                     ON d.lesson_id = c.lesson_id
-                    WHERE b.student_id = a.student_id and d.lesson_id = " . $this->searchlesson ."
+                    WHERE b.student_id = a.student_id and d.lesson_id = " . $this->searchlesson . "
                     ) AS t_hur";
-        }else {
+        } else {
             $query .= "(SELECT 
                     d.hours - SUM(c.hours) 
                     FROM dl_student_course b
@@ -168,11 +168,12 @@ class DlStudentSearch extends DlStudent
                     JOIN dl_student_profile sp ON sp.student_id = a.student_id ";
 
 
-        $search_query = "";
-        if(!empty($search_vals))
-        $search_query = implode(" AND ",$search_vals);
+        $search_query = " sc.admin_id = " . $adminid;
 
-        $query .= ($search_query!="")?" Where ": "";
+        if (!empty($search_vals))
+            $search_query = implode(" AND ", $search_vals);
+
+        $query .= ($search_query != "") ? " Where " : "";
 
         $query .= $search_query;
 
@@ -180,16 +181,16 @@ class DlStudentSearch extends DlStudent
 
         if ($this->searchstatus == 1) {
             // Not Assigned
-            $query .=  "HAVING t_hur IS NULL";
+            $query .= "HAVING t_hur IS NULL";
         } else if ($this->searchstatus == 2) {
             // Assigned (Remaining hours need to add)
-            $query .=  "HAVING t_hur IS NOT NULL and t_hur!=0";
-        }else if ($this->searchstatus == 5) {
+            $query .= "HAVING t_hur IS NOT NULL and t_hur!=0";
+        } else if ($this->searchstatus == 5) {
             // Assigned (No Remaining hours)
-            $query .=  "HAVING t_hur IS NOT NULL and t_hur=0";
+            $query .= "HAVING t_hur IS NOT NULL and t_hur=0";
         }
 
-            $query .= " ORDER BY sc.created_at DESC";
+        $query .= " ORDER BY a.student_id DESC";
 //echo $query; exit;
         $totalCount = Yii::$app->db->createCommand("SELECT COUNT(*) FROM (" . $query . ") as tc")->queryScalar();
 
