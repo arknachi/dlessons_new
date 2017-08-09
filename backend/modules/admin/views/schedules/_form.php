@@ -95,6 +95,7 @@ $form = ActiveForm::begin([
                             });
                     echo isset($students_info[$model->scr_id]) ? $students_info[$model->scr_id] : "";
                     ?>    
+                    
                 </div>
             </div>
         </div>
@@ -116,7 +117,7 @@ $form = ActiveForm::begin([
             ?>
         </div> 
     <?php } ?>
-
+    
 
     <?php if ($model->isNewRecord) { ?>
         <?php
@@ -183,6 +184,7 @@ if (!$model->isNewRecord) {
     <?= $form->field($model, 'scr_completed_status')->dropDownList([0 => 'Not Yet Complete', 1 => 'Completed', 2 => 'Cancelled'], ['class' => 'form-control'])->label('Status') ?>
     <div class="form-group">
         <?php echo Html::hiddenInput('schedule_id', $model->schedule_id, ['class' => 'form-control']); ?>
+        <?php echo Html::hiddenInput('scr_id', $model->scr_id, ['class' => 'form-control']); ?>
     </div>
 <?php } ?>
 <div class="box-footer">
@@ -252,36 +254,37 @@ $script = <<< JS
                 async: false,
                 data: $('.form-group input[type=\'text\'], .form-group input[type=\'hidden\'] , .form-group select'),
                 success: function(data) {
-                 if(data.leadsCount==1){
+                 if(data.leadsCount==1 || data.leadsCount==2 ){
                     testing_hours = true;                    
                   }else{                
                      $("#error_scheduleid").show();   
                   }  
+                
                 }
            });
            return testing_hours;    
          }); 
         
                 
-           $('#schedule-button').on('click', function() {
-         var testing = false;
-            $("#error_schedule").hide();
-            $.ajax({
-                url  : "{$chckscheduleexist_callback}",
-                type : "POST", 
-                dataType: 'json',  
-                async: false,
-                data: $('.form-group input[type=\'text\'], .form-group input[type=\'hidden\'] , .form-group select'),
-                success: function(data) {
-                 if(data.leadsCount==0){
-                    testing = true;                    
-                  }else{                
-                     $("#error_schedule").show();   
-                  }  
-                }
-           });
-           return testing;    
-        }); 
+//           $('#schedule-button').on('click', function() {
+//         var testing = false;
+//            $("#error_schedule").hide();
+//            $.ajax({
+//                url  : "{$chckscheduleexist_callback}",
+//                type : "POST", 
+//                dataType: 'json',  
+//                async: false,
+//                data: $('.form-group input[type=\'text\'], .form-group input[type=\'hidden\'] , .form-group select'),
+//                success: function(data) {
+//                 if(data.leadsCount==0){
+//                    testing = true;                    
+//                  }else{                
+//                     $("#error_schedule").show();   
+//                  }  
+//                }
+//           });
+//           return testing;    
+//        }); 
            
                 
         initdatepicker(); 

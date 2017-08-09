@@ -32,11 +32,11 @@ class SchedulesController extends Controller {
             'access' => [
                 'class' => AccessControl::className(),
                 'rules' => [
-                    [
+                        [
                         'actions' => [''],
                         'allow' => true,
                     ],
-                    [
+                        [
                         'actions' => ['index', 'create', 'update', 'view', 'delete', 'deleteall', 'scheduledstudents', 'unassignpaidstud', 'ins_schedule_info', 'available_ins_info', 'chckscheduleexist', 'schedulehoursexist', 'statusupdate'],
                         'allow' => true,
                         'roles' => ['@'],
@@ -524,26 +524,71 @@ class SchedulesController extends Controller {
     }
 
     public function actionSchedulehoursexist() {
-    $data['leadsCount'] = 0;
+        $data['leadsCount'] = 0;
+          
         $admin_id = Yii::$app->user->identity->ParentAdminId;
         $lesson_id = $_POST['DbSchedules']['lesson_id'];
         unset($_POST['DbSchedules']['lesson_id']);
-        $stdcrsid = $_POST['DbSchedules']['stdcrsid'];
-        unset($_POST['DbSchedules']['stdcrsid']);
-        $summ = 0;
-        foreach ($_POST['DbSchedules'] as $modelinfo) {
-
-            $start_time = abs(date('H:i:s', strtotime($modelinfo ['start_time'])));
-            $end_time = abs(date('H:i:s', strtotime($modelinfo ['end_time'])));
-            $different = $end_time - $start_time;
-             $summ += $different;
-            $remainings = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $stdcrsid, 'id' => 2, 'delval' => '0'])->sum('hours'));
+        
+        if(isset($_POST['scr_id'])){
+            $stdcrsid = $_POST['scr_id'];
+        }else if(isset($_POST['DbSchedules']['stdcrsid'])){
+            $stdcrsid = $_POST['DbSchedules']['stdcrsid'];
+            unset($_POST['DbSchedules']['stdcrsid']);
         }
-         
-         if ($remainings >= $summ) {
-//               print_r($summ);
-                  $data['leadsCount'] = 1;
+        
+        if(isset($_POST['DbSchedules']['schedule_id'])){
+            unset($_POST['DbSchedules']['schedule_id']);
+        }
+        
+//        $stdcrsid = $_POST['DbSchedules']['stdcrsid'];
+//        unset($_POST['DbSchedules']['stdcrsid']);
+        $summ = 0;
+        if($lesson_id != '' && $stdcrsid != ''){
+             
+            $total_scheduled = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $stdcrsid, 'id' => 2, 'delval' => '0'])->sum('hours'));
+            $les_info = DlLessons::find()->select('hours')->Where(['lesson_id' => $lesson_id])->one();
+            $total_lessonhours = $les_info->hours; 
+            $remainings = $total_lessonhours - $total_scheduled;
+            if(isset($_POST['scr_id'])){
+                $current_scheduled_time = round(DbSchedules::find()->select('hours')->where('schedule_id = :tour_id', ['tour_id' => $_POST['schedule_id']])->sum('hours'));
+                 
+                foreach ($_POST['DbSchedules'] as $key=>$modelinfo) {
+                    if($key == 'start_time'){
+                        $start_time = abs(date('H:i:s', strtotime($modelinfo)));
+                    }
+                     if($key == 'end_time'){
+                        $end_time = abs(date('H:i:s', strtotime($modelinfo)));
+                    }
+
+                }
+                $different = $end_time - $start_time;
+                $summ = round($different - $current_scheduled_time);
+            }else{
+                foreach ($_POST['DbSchedules'] as $modelinfo) {
+                        $start_time = abs(date('H:i:s', strtotime($modelinfo['start_time'])));
+                        $end_time = abs(date('H:i:s', strtotime($modelinfo['end_time'])));
+                        $different = $end_time - $start_time;
+                        $summ += $different;
+
+                }
             }
+            
+            $c_hours = $summ + $total_scheduled;
+            
+            $data['lessonhours'] = $total_lessonhours;
+            $data['scheduled'] = $total_scheduled;
+            $data['remaining'] = $remainings;
+            $data['formhour'] = $summ;
+            $data['c_hours'] = $c_hours;
+            
+
+            if ($total_lessonhours >= $c_hours ) {
+                $data['leadsCount'] = 1;
+            }
+        }else{
+            $data['leadsCount'] = 2;
+        }
         echo json_encode($data);
         exit;
     }
@@ -601,7 +646,7 @@ class SchedulesController extends Controller {
      */
     public function actionUpdate($id) {
         $model = $this->findModel($id);
-
+        
         if ($model->load(Yii::$app->request->post())) {
             $post = Yii::$app->request->post();
             $status = $post['DbSchedules']['scr_completed_status'];
@@ -649,7 +694,7 @@ class SchedulesController extends Controller {
 
         if ($available_instructors)
             $instructors = array_intersect_key($instructors, $available_instructors);
-
+                
         return $this->render('update', [
                     'model' => $model,
                     'instructors' => $instructors
