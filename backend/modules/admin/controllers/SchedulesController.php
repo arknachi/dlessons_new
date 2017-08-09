@@ -136,20 +136,8 @@ class SchedulesController extends Controller {
     public function actionIns_schedule_info() {
         if (Yii::$app->request->isAjax) {
             $data = array();
-
-            $_index = $ins_id = $schedule_date = '';
-
-//            $ins_id = $_POST['DbSchedules']['instructor_id'];
-            if ($_POST['DbSchedules']) {
-                foreach ($_POST['DbSchedules'] as $key => $DbSchedules) {
-                    if (isset($DbSchedules['instructor_id'])) {
-                        $ins_id = $DbSchedules['instructor_id'];
-                        $_index = $key;
-                    }
-                    if (isset($DbSchedules['schedule_date']))
-                        $schedule_date = $DbSchedules['schedule_date'];
-                }
-            }
+            $ins_id = $_POST['ins_id'];
+            $schedule_date = $_POST['sch_date'];
 
 
             $schedule_date = Yii::$app->formatter->asDate($schedule_date, 'php:Y-m-d');
@@ -166,7 +154,6 @@ class SchedulesController extends Controller {
                             'instructor_id' => $ins_id,
                             'status' => 1,
                         ])->orderBy(['end_time' => SORT_DESC])->one();
-//                print_r($schedules_list);
                 $data['available_date'] = Yii::$app->formatter->asDate($crsmodel->available_date, 'php:m/d/Y');
                 if ($schedules_list) {
                     $strtTime = strtotime("+1 minute", strtotime($schedules_list->end_time));
@@ -176,11 +163,8 @@ class SchedulesController extends Controller {
                 }
                 $data['end_time'] = date('h:i a', strtotime($crsmodel->end_time));
                 $data['instructor_id'] = $crsmodel->instructor_id;
-                $data['start_time_id'] = "#dbschedules-" . $_index . "-start_time";
-                $data['end_time_id'] = "#dbschedules-" . $_index . "-end_time";
 
                 echo json_encode($data);
-//                print_r($data);
                 exit;
             }
         }
@@ -530,12 +514,18 @@ class SchedulesController extends Controller {
         $lesson_id = $_POST['DbSchedules']['lesson_id'];
         unset($_POST['DbSchedules']['lesson_id']);
         
-        if(isset($_POST['scr_id'])){
-            $stdcrsid = $_POST['scr_id'];
-        }else if(isset($_POST['DbSchedules']['stdcrsid'])){
+        $flag = '0';
+        if(isset($_POST['DbSchedules']['stdcrsid']) && $_POST['DbSchedules']['stdcrsid'] !=""){
+            $data['stdcrsid'] = $_POST['DbSchedules']['stdcrsid'];
             $stdcrsid = $_POST['DbSchedules']['stdcrsid'];
             unset($_POST['DbSchedules']['stdcrsid']);
+            $flag = '1';
+        }else if(isset($_POST['scr_id'])){
+            $stdcrsid = $_POST['scr_id'];
+            $flag = '2';
         }
+        
+        
         
         if(isset($_POST['DbSchedules']['schedule_id'])){
             unset($_POST['DbSchedules']['schedule_id']);
@@ -551,8 +541,8 @@ class SchedulesController extends Controller {
             $total_lessonhours = $les_info->hours; 
             $remainings = $total_lessonhours - $total_scheduled;
             if(isset($_POST['scr_id'])){
-                $current_scheduled_time = round(DbSchedules::find()->select('hours')->where('schedule_id = :tour_id', ['tour_id' => $_POST['schedule_id']])->sum('hours'));
-                 
+                
+                
                 foreach ($_POST['DbSchedules'] as $key=>$modelinfo) {
                     if($key == 'start_time'){
                         $start_time = abs(date('H:i:s', strtotime($modelinfo)));
@@ -563,7 +553,15 @@ class SchedulesController extends Controller {
 
                 }
                 $different = $end_time - $start_time;
-                $summ = round($different - $current_scheduled_time);
+                if($flag == '2'){
+                    $current_scheduled_time = DbSchedules::find()->select('hours')->where('schedule_id = :tour_id', ['tour_id' => $_POST['schedule_id']])->one();
+                    $summ = round(abs($different - $current_scheduled_time->hours));
+                    $data['current_scheduled_time'] = $current_scheduled_time->hours;
+                } else {
+                    $summ = $different;
+                }
+                $data['stdcrsid'] = $stdcrsid;
+                
             }else{
                 foreach ($_POST['DbSchedules'] as $modelinfo) {
                         $start_time = abs(date('H:i:s', strtotime($modelinfo['start_time'])));
@@ -582,7 +580,7 @@ class SchedulesController extends Controller {
             $data['formhour'] = $summ;
             $data['c_hours'] = $c_hours;
             
-
+            
             if ($total_lessonhours >= $c_hours ) {
                 $data['leadsCount'] = 1;
             }
@@ -644,7 +642,7 @@ class SchedulesController extends Controller {
      * @param integer $id
      * @return mixed
      */
-    public function actionUpdate($id) {
+    public function actionUpdate($id) {   
         $model = $this->findModel($id);
         
         if ($model->load(Yii::$app->request->post())) {
@@ -665,6 +663,10 @@ class SchedulesController extends Controller {
                 $model->updated_by = Yii::$app->user->identity->id;
                 $model->updated_at = date("Y-m-d H:i:s");
                 $model->scr_completed_status = $status;
+                
+                if ($model->stdcrsid != "") {
+                    $model->scr_id = $model->stdcrsid;
+                }
                 $model->save();
 
 //                if ($stdcrsid != "") {

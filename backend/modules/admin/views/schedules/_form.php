@@ -56,8 +56,7 @@ $form = ActiveForm::begin([
     </div>
 
     <div id="error_scheduleid">            
-        <div class="alert alert-danger alert-dismissable">              
-            Schedule hour is lesser than the times you selected.Please select different time for this lesson.
+        <div class="alert alert-danger alert-dismissable">                          
         </div>
     </div>
 
@@ -152,11 +151,11 @@ $form = ActiveForm::begin([
                         <button type="button" class="pull-right remove-item btn btn-danger btn-xs"><i class="fa fa-minus"></i></button>
                         <div class="clearfix"></div>
                     </div>
-                    <div class="panel-body schedule">                        
+                    <div class="panel-body schedule-<?= ($index) ?>">                        
                         <?= $form->field($modelschedules, "[{$index}]schedule_date")->textInput(['class' => 'form-control schedule_date datepicker', 'data-index' => $index]) ?>                           
                         <?= $form->field($modelschedules, "[{$index}]instructor_id")->dropDownList($instructors, ['prompt' => '--- Select Instructor ---', 'class' => 'form-control instructor_id', 'data-index' => $index])->label("Instructor"); ?>
-                        <?= $form->field($modelschedules, "[{$index}]start_time")->textInput(['class' => 'form-control timepicker']) ?>
-                        <?= $form->field($modelschedules, "[{$index}]end_time")->textInput(['class' => 'form-control timepicker']) ?>
+                        <?= $form->field($modelschedules, "[{$index}]start_time")->textInput(['class' => 'form-control start_time timepicker']) ?>
+                        <?= $form->field($modelschedules, "[{$index}]end_time")->textInput(['class' => 'form-control end_time timepicker']) ?>
                         <?= $form->field($modelschedules, "[{$index}]schedule_type")->dropDownList([1 => 'Pickup', 2 => 'Office'], ['class' => 'form-control schedule_type'])->label('Type') ?>                       
                         <div class="location_id" style="display: none;">        
                             <?=
@@ -222,6 +221,9 @@ $script = <<< JS
             $(".dynamicform_wrapper .schedule_date").each(function(index) {               
                 $(this).attr("data-index",(index))                    
             });
+            $(".dynamicform_wrapper .panel-body").each(function(index) {               
+                $(this).attr("class","panel-body schedule-"+(index))                    
+            });
          $(".dynamicform_wrapper .instructor_id").each(function(index) {               
                 $(this).attr("data-index",(index))                    
             });
@@ -256,8 +258,14 @@ $script = <<< JS
                 success: function(data) {
                  if(data.leadsCount==1 || data.leadsCount==2 ){
                     testing_hours = true;                    
-                  }else{                
-                     $("#error_scheduleid").show();   
+                  }else{               
+                    var msg = "Remaining Hours for this Student is "+data.remaining+". Create Schedule before it is Completed."
+                    $("#error_scheduleid .alert.alert-danger").text(msg);
+                     $("#error_scheduleid").show(); 
+                     var target = $(".header");
+                      $('html,body').animate({
+                            scrollTop: target.offset().top
+                          }, 1000);
                   }  
                 
                 }
@@ -290,9 +298,19 @@ $script = <<< JS
         initdatepicker(); 
         $("body").on('change',".schedule_type",function(){
             if($(this).val() == 2){
-                $(this).closest('.panel-body').find('.location_id').show();
+                if($(this).closest('.panel-body').length){
+                    $(this).closest('.panel-body').find('.location_id').show();
+                }else{
+                    $('.location_id').show();
+                    
+                }
             }else{
-                $(this).closest('.panel-body').find('.location_id').hide();
+                 if($(this).closest('.panel-body').length){
+                    $(this).closest('.panel-body').find('.location_id').hide();
+                }else{
+                    $('.location_id').hide();
+                }
+                
             }
         });
                 
@@ -329,22 +347,29 @@ $script = <<< JS
            });  
         }
                 
-        $(document).on('change','.instructor_id', function() {
+        $('body').on('change','.instructor_id', function() {
             var ins_id = $(this).val();     
-            if(ins_id!="")  
-              instructorlist(ins_id);   
+            var ins_index_val = $(this).data('index');
+            if(ins_id!=""){  
+              instructorlist($(this));                 
+            }
         });     
             
-        function instructorlist(ins_id){    
+        function instructorlist(_that){  
+            var panel_section = _that.closest('.panel-body');
+            ins_id = _that.val();
+            sch_date = panel_section.find('.schedule_date').val();
+                
             $.ajax({
                 url  : "{$ins_si_callback}",
                 type : "POST", 
                 dataType: 'json',    
-                data: $('.schedule .form-group input[type=\'text\'] , .schedule .form-group select'),
+                data: { ins_id : ins_id, sch_date: sch_date },
                 success: function(data) {
                  if(data.start_time){
-                    $(data.start_time_id).val(data.start_time);
-                    $(data.end_time_id).val(data.end_time);
+                console.log(panel_section);
+                    panel_section.find('.start_time').val(data.start_time);
+                    panel_section.find('.end_time').val(data.end_time);
                   }  
                 }
            });  
