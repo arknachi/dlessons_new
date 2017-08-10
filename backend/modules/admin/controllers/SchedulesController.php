@@ -317,6 +317,8 @@ class SchedulesController extends Controller {
                     'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
                     'different' => $different,
+                    'std_scr_id' => $id,
+                    'crs_status' => $students_info->scr_completed_date
         ]);
     }
 
@@ -678,6 +680,7 @@ class SchedulesController extends Controller {
                    
                     $crsmodel = DlStudentCourse::findOne($model->scr_id);
                     $crsmodel->scr_completed_status = 1;
+                    $crsmodel->scr_completed_date = date("Y-m-d");
                     $crsmodel->save();
 //                      print_r($different);
 //                exit;

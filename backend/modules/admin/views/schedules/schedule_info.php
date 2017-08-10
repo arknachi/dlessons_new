@@ -57,7 +57,7 @@ use yii\widgets\ActiveForm;
                 'attribute' => 'hours',
                 'format' => 'raw',
                 'value' => function ($model) {
-                    return $model->hours;
+                    return round($model->hours);
                 },
             ],
             [

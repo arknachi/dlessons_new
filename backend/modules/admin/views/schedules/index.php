@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'lesson_id' => $model->lesson_id,])->one();
                     $totalh = $les_info->hours;
                     $different = abs($les_info->hours - $sum);
-                    return $different;
+                    return round($different);
                 },
             ],
            
