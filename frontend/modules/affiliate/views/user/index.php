@@ -1,6 +1,8 @@
 <?php
 
 use common\components\Myclass;
+use common\models\DbSchedules;
+use common\models\DlLessons;
 use yii\data\ActiveDataProvider;
 use yii\grid\GridView;
 use yii\helpers\Html;
@@ -22,6 +24,28 @@ $this->title = "My Account";
             'columns' => [
                 ['class' => 'yii\grid\SerialColumn'],
                 'lesson.lesson_name',
+                 [
+                'header' => 'Total Hours',
+                'attribute' => 'lesson.hours',
+            ],
+                [
+                'header' => 'Remaining Hours',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    $studcrid = $model->scr_id;
+                    $remainings = DbSchedules::find()->where('scr_id = :tour_id and scr_completed_status != :id and isDeleted = :delval', ['tour_id' => $studcrid, 'id' => 2, 'delval'=>'0'])->all();
+                    $sum = 0;
+                    foreach ($remainings as $remaining) {
+                        $sum += $remaining->hours;
+                    }
+                    $les_info = DlLessons::find()->Where([
+                                'lesson_id' => $model->lesson_id,])->one();
+                    $totalh = $les_info->hours;
+                    $different = abs($les_info->hours - $sum);
+                    return $different;
+                },
+            ],
+                        
 //                [
 //                    'header' => 'Schedule Status',
 //                    'attribute' => 'schedule_id',

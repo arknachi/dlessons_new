@@ -2,7 +2,9 @@
 
 namespace frontend\modules\affiliate\controllers;
 
+use common\models\DbSchedules;
 use common\models\DbSchedulesSearch;
+use common\models\DlLessons;
 use common\models\DlStudent;
 use common\models\DlStudentCourse;
 use Yii;
@@ -44,8 +46,22 @@ class CourseController extends Controller {
         $students_info = DlStudentCourse::find()->Where(['student_id' => Yii::$app->user->identity->student_id])->one();
          $searchModel = new DbSchedulesSearch();
         $dataProvider = $searchModel->courselist(Yii::$app->request->queryParams, $students_info->scr_id);
+        $stud_info = DlStudent::find()->Where(['student_id' => $students_info->student_id,])->one();
+
+        $les_info = DlLessons::find()->Where(['lesson_id' => $students_info->lesson_id,])->one();
+
+        $total_hours = $les_info->hours;
+
+        $remainings = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id and isDeleted = :delval', ['tour_id' => $students_info->scr_id, 'id' => 2, 'delval' => '0'])->sum('hours'));
+        $different = abs($total_hours - $remainings);
+
+
         return $this->render('view', [
+                    'stud_info' => $stud_info,
+                    'les_info' => $les_info,
+                    'searchModel' => $searchModel,
                     'dataProvider' => $dataProvider,
+                    'different' => $different,
         ]);
         
         return $this->render('view', compact('model'));

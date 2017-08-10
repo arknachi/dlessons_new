@@ -50,7 +50,6 @@ $form = ActiveForm::begin([
     </div>
      <div id="error_scheduleid">            
         <div class="alert alert-danger alert-dismissable">              
-            Schedule hour is lesser than the times you selected.Please select different time for this lesson.
         </div>
     </div>
     
@@ -148,7 +147,13 @@ $script = <<< JS
                  if(data.leadsCount==1){
                     testing_hours = true;                    
                   }else{                
-                     $("#error_scheduleid").show();   
+                    var msg = "Remaining Hours for this Student is "+data.remaining+". Create Schedule before it is Completed."
+                    $("#error_scheduleid .alert.alert-danger").text(msg);
+                     $("#error_scheduleid").show(); 
+                     var target = $(".header");
+                      $('html,body').animate({
+                            scrollTop: target.offset().top
+                          }, 1000);   
                   }  
                 
                 }

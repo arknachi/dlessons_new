@@ -74,9 +74,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'raw',
                 'value' => function ($model) {
                     if ($model->schedule_id) {
-
 //                        $schedule_count = DbSchedules::find()->where('scr_id = :tour_id and scr_completed_status = :id', ['tour_id' => $model->scr_id, 'id' => 0])->count();
-//
 //                        $scmodel = DlStudentCourse::find()->where(['scr_id' => $model->scr_id])->one();
 //                        if ($schedule_count) {
                          if($model->dlStudentCourses){
@@ -85,8 +83,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         }else{
                             $sc_stat = '<span class="label label-success">Completed</span>';
                         }
-
-                         
                         return $sc_stat;
                          }
                     }

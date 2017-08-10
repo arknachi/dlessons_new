@@ -87,7 +87,7 @@ class SchedulesController extends Controller {
                     'lesson_id' => $lesson_id,
                     'admin_id' => $admid,
                     'scr_paid_status' => 1,
-             'scr_id' => $schedulemodel->scr_id,
+                    'scr_id' => $schedulemodel->scr_id,
                 ])->one();
 
         return $this->render('schedule_students', [
@@ -131,13 +131,13 @@ class SchedulesController extends Controller {
                 $model->hours = round(abs($time2 - $time1) / 3600);
                 if ($model->validate()) {
                     $stdcrsid = $model->stdcrsid;
-                    $model->scr_id=$stdcrsid;
+                    $model->scr_id = $stdcrsid;
                     $model->location_id = ($model->schedule_type == 2) ? $model->location_id : 0;
                     $model->created_by = Yii::$app->user->identity->id;
                     $model->created_at = date("Y-m-d H:i:s");
                     $model->updated_at = date("Y-m-d H:i:s");
                     $model->role = 2;
-                  
+
                     /* Add the schedule and Assign the schedule for the student course */
                     if ($model->save() && $stdcrsid != "") {
 
@@ -187,14 +187,37 @@ class SchedulesController extends Controller {
 
             if (isset(Yii::$app->user->identity->adminid) && $lesson_id != "") {
                 $adminid = Yii::$app->user->identity->adminid;
-                $query = DlStudentCourse::find()->andWhere([
+                $querys = DlStudentCourse::find()->andWhere([
                             'lesson_id' => $lesson_id,
                             'admin_id' => $adminid,
-                            'scr_paid_status' => "1",
+                            'scr_paid_status' => '1',
                             'scr_completed_status' => '0',
                         ])->all();
 
-                $students_list = ArrayHelper::map($query, "scr_id", function($model, $defaultValue) {
+                //Check Avalilable Schedules
+                $avaliable = array();
+                foreach ($querys as $query) {
+
+                    $les_info = DlLessons::find()->Where(['lesson_id' => $lesson_id,])->one();
+                    $total_hours = $les_info->hours;
+                    $remainings = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $query->scr_id, 'id' => 2, 'delval' => '0'])->sum('hours'));
+                    $different = abs($total_hours - $remainings);
+
+                    if ($different > 0) {
+                        $avaliable[] = $query->scr_id;
+                    }
+                }
+
+                $querys_new = DlStudentCourse::find()
+                                ->where(['in', 'scr_id', $avaliable])
+                                ->andWhere([
+                                    'lesson_id' => $lesson_id,
+                                    'admin_id' => $adminid,
+                                    'scr_paid_status' => '1',
+                                    'scr_completed_status' => '0',
+                                ])->all();
+//                print_r($query/s_new);
+                $students_list = ArrayHelper::map($querys_new, "scr_id", function($model, $defaultValue) {
                             return $model->studentinfo;
                         });
 
@@ -212,36 +235,95 @@ class SchedulesController extends Controller {
             }
         }
     }
-     public function actionSchedulehoursexist() {
+
+//    public function actionUnassignpaidstud() {
+//        if (Yii::$app->request->isAjax) {
+//
+//            $lesson_id = $_POST['id'];
+//            if (isset(Yii::$app->user->identity->ParentAdminId) && $lesson_id != "") {
+//                $adminid = Yii::$app->user->identity->ParentAdminId;
+//                $querys = DlStudentCourse::find()->andWhere([
+//                            'lesson_id' => $lesson_id,
+//                            'admin_id' => $adminid,
+//                            'scr_paid_status' => '1',
+//                            'scr_completed_status' => '0',
+//                        ])->all();
+//
+//                //Check Avalilable Schedules
+//                $avaliable = array();
+//                foreach ($querys as $query) {
+//
+//                    $les_info = DlLessons::find()->Where(['lesson_id' => $lesson_id,])->one();
+//                    $total_hours = $les_info->hours;
+//                    $remainings = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $query->scr_id, 'id' => 2, 'delval' => '0'])->sum('hours'));
+//                    $different = abs($total_hours - $remainings);
+//
+//                    if ($different > 0) {
+//                        $avaliable[] = $query->scr_id;
+//                    }
+//                }
+//
+//                $querys_new = DlStudentCourse::find()
+//                                ->where(['in', 'scr_id', $avaliable])
+//                                ->andWhere([
+//                                    'lesson_id' => $lesson_id,
+//                                    'admin_id' => $adminid,
+//                                    'scr_paid_status' => '1',
+//                                    'scr_completed_status' => '0',
+//                                ])->all();
+//
+//                $students_list = ArrayHelper::map($querys_new, "scr_id", function($model, $defaultValue) {
+//                            return $model->studentinfo;
+//                        });
+//
+//                if (!empty($students_list)) {
+//                    $slist = "<option value=''>---Please select any student---</option>";
+//                    foreach ($students_list as $key => $sinfo) {
+//                        $slist .= "<option value='" . $key . "'>" . $sinfo . "</option>";
+//                    }
+//                } else {
+//                    $slist = "<option value=''>No Records</option>";
+//                }
+//
+//                echo $slist;
+//                exit;
+//            }
+//        }
+//    }
+
+
+    public function actionSchedulehoursexist() {
         $data['leadsCount'] = 0;
-       $stdcrsid= $_POST['DbSchedules']['stdcrsid'];
-        $lesson_id= $_POST['DbSchedules']['lesson_id'];
-        if($lesson_id != '' && $stdcrsid != ''){
+        $stdcrsid = $_POST['DbSchedules']['stdcrsid'];
+        $lesson_id = $_POST['DbSchedules']['lesson_id'];
+        if ($lesson_id != '' && $stdcrsid != '') {
             $total_scheduled = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $stdcrsid, 'id' => 2, 'delval' => '0'])->sum('hours'));
             $les_info = DlLessons::find()->select('hours')->Where(['lesson_id' => $lesson_id])->one();
-            $total_lessonhours = $les_info->hours; 
+            $total_lessonhours = $les_info->hours;
             $remainings = $total_lessonhours - $total_scheduled;
-                  $start_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['start_time'])));
-                  $end_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['end_time'])));
-                   $different = $end_time - $start_time;
-                   if($remainings >= $different){
-                         $data['leadsCount'] = 1;
-                   }
-        }  else {
-       $crsmodel = DbSchedules::findOne($_POST['schedule_id']);
-       $total_scheduled = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $crsmodel ['scr_id'], 'id' => 2, 'delval' => '0'])->sum('hours'));
-       $les_info = DlLessons::find()->select('hours')->Where(['lesson_id' => $crsmodel ['lesson_id']])->one();
-            $total_lessonhours = $les_info->hours; 
-            $remainings = $total_lessonhours - $total_scheduled;
-                    $start_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['start_time'])));
-                  $end_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['end_time'])));
-                   $different = $end_time - $start_time;
-                   if($remainings >= $different){
-                         $data['leadsCount'] = 1;
-                   }
-              }
-             
-                 
+            $start_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['start_time'])));
+            $end_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['end_time'])));
+            $different = $end_time - $start_time;
+            if ($remainings >= $different) {
+                $data['leadsCount'] = 1;
+            }
+        } else {
+            $current_scheduled_time = DbSchedules::find()->select('hours')->where('schedule_id = :tour_id', ['tour_id' => $_POST['schedule_id']])->one();
+            $crsmodel = DbSchedules::findOne($_POST['schedule_id']);
+            $total_scheduled = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id  and isDeleted = :delval', ['tour_id' => $crsmodel ['scr_id'], 'id' => 2, 'delval' => '0'])->sum('hours'));
+            $differ = $total_scheduled - $current_scheduled_time->hours;
+            $les_info = DlLessons::find()->select('hours')->Where(['lesson_id' => $crsmodel ['lesson_id']])->one();
+            $total_lessonhours = $les_info->hours;
+            $remainings = $total_lessonhours - $differ;
+            $start_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['start_time'])));
+            $end_time = abs(date('H:i:s', strtotime($_POST['DbSchedules']['end_time'])));
+            $different = $end_time - $start_time;
+            if ($remainings >= $different) {
+                $data['leadsCount'] = 1;
+            }
+        }
+
+
 //            if(isset($_POST['scr_id'])){
 //                $current_scheduled_time = round(DbSchedules::find()->select('hours')->where('schedule_id = :tour_id', ['tour_id' => $_POST['schedule_id']])->sum('hours'));
 //                 
@@ -281,10 +363,10 @@ class SchedulesController extends Controller {
 //        }else{
 //            $data['leadsCount'] = 2;
 //        }
+        $data['remaining'] = $remainings;
         echo json_encode($data);
         exit;
     }
-
 
     public function actionChckscheduleexist() {
         $data['leadsCount'] = 0;
@@ -359,12 +441,21 @@ class SchedulesController extends Controller {
                 $model->schedule_date = (isset($model->schedule_date)) ? Yii::$app->formatter->asDate($model->schedule_date, 'php:Y-m-d') : "";
                 $model->start_time = date('H:i:s', strtotime($model->start_time));
                 $model->end_time = date('H:i:s', strtotime($model->end_time));
-                 $time1 = strtotime($model->start_time);
+                $time1 = strtotime($model->start_time);
                 $time2 = strtotime($model->end_time);
                 $model->hours = round(abs($time2 - $time1) / 3600);
                 if ($model->validate()) {
                     $stdcrsid = $model->stdcrsid;
-
+                    $les_info = DlLessons::find()->Where(['lesson_id' => $model->lesson_id])->one();
+                    $total_hours = $les_info->hours;
+                    $remainings = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status = :id  and isDeleted = :delval', ['tour_id' => $model->scr_id, 'id' => 1, 'delval' => '0'])->sum('hours'));
+                    $different = abs($total_hours - $remainings);
+                    if($different==0){
+                         $crsmodel = DlStudentCourse::findOne($model->scr_id);
+                         $crsmodel->scr_completed_status=1;
+                          $crsmodel->save();
+                    }
+//                     print_r($model->scr_id);exit;
                     $model->location_id = ($model->schedule_type == 2) ? $model->location_id : 0;
                     $model->updated_by = Yii::$app->user->identity->id;
                     $model->updated_at = date("Y-m-d H:i:s");
@@ -372,9 +463,8 @@ class SchedulesController extends Controller {
 
                     if ($stdcrsid != "") {
 //                        $schedule_id = $model->schedule_id;
-
 //                        DlStudentCourse::updateAll(['schedule_id' => 0], "schedule_id = '" . $schedule_id . "'");
-
+                       
                         $crsmodel = DlStudentCourse::findOne($stdcrsid);
 //                        $crsmodel->schedule_id = $schedule_id;
                         $crsmodel->save();
