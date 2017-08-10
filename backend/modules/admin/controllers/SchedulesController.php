@@ -557,6 +557,7 @@ class SchedulesController extends Controller {
                     $current_scheduled_time = DbSchedules::find()->select('hours')->where('schedule_id = :tour_id', ['tour_id' => $_POST['schedule_id']])->one();
                     $total_scheduled = round(abs($total_scheduled - $current_scheduled_time->hours));
                     $summ = $different;
+                    $remainings = $total_lessonhours - $total_scheduled;
                     $data['current_scheduled_time'] = $current_scheduled_time->hours;
                 } else {
                     $summ = $different;
@@ -645,6 +646,7 @@ class SchedulesController extends Controller {
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post())) {
+            
             $post = Yii::$app->request->post();
             $status = $post['DbSchedules']['scr_completed_status'];
             $model->admin_id = Yii::$app->user->identity->ParentAdminId;

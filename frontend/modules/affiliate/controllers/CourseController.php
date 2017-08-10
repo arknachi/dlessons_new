@@ -41,18 +41,19 @@ class CourseController extends Controller {
 
         return $this->render('index', compact('model'));
       }
-      public function actionView() {
-          
-        $students_info = DlStudentCourse::find()->Where(['student_id' => Yii::$app->user->identity->student_id])->one();
+      public function actionView($id) {
+        
+        $students_info = DlStudentCourse::find()->Where(['scr_id' =>$id])->one();
+         
          $searchModel = new DbSchedulesSearch();
-        $dataProvider = $searchModel->courselist(Yii::$app->request->queryParams, $students_info->scr_id);
+        $dataProvider = $searchModel->courselist(Yii::$app->request->queryParams,$id);
         $stud_info = DlStudent::find()->Where(['student_id' => $students_info->student_id,])->one();
 
         $les_info = DlLessons::find()->Where(['lesson_id' => $students_info->lesson_id,])->one();
 
         $total_hours = $les_info->hours;
 
-        $remainings = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id and isDeleted = :delval', ['tour_id' => $students_info->scr_id, 'id' => 2, 'delval' => '0'])->sum('hours'));
+        $remainings = round(DbSchedules::find()->select('hours')->where('scr_id = :tour_id and scr_completed_status != :id and isDeleted = :delval', ['tour_id' => $id, 'id' => 2, 'delval' => '0'])->sum('hours'));
         $different = abs($total_hours - $remainings);
 
 

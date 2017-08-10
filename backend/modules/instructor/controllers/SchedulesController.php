@@ -436,7 +436,6 @@ class SchedulesController extends Controller {
             }
 
             if ($model->load(Yii::$app->request->post())) {
-
                 $model->admin_id = Yii::$app->user->identity->adminid;
                 $model->schedule_date = (isset($model->schedule_date)) ? Yii::$app->formatter->asDate($model->schedule_date, 'php:Y-m-d') : "";
                 $model->start_time = date('H:i:s', strtotime($model->start_time));
@@ -455,6 +454,9 @@ class SchedulesController extends Controller {
                          $crsmodel->scr_completed_status=1;
                           $crsmodel->save();
                     }
+                     if ($model->stdcrsid != "") {
+                    $model->scr_id = $model->stdcrsid;
+                }
 //                     print_r($model->scr_id);exit;
                     $model->location_id = ($model->schedule_type == 2) ? $model->location_id : 0;
                     $model->updated_by = Yii::$app->user->identity->id;

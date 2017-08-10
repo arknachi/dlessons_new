@@ -118,7 +118,7 @@ $this->title = "My Account";
                 'template' => '{view}',
                 'buttons' => [
                     'view' => function ($url, $model) {
-                        $url = Url::toRoute('course/view');
+                        $url = Url::toRoute('course/view?id='.$model->scr_id);
                         return Html::a('<span title="Student Detailed Information" class="glyphicon glyphicon-eye-open"></span>', $url);
                     },
                                     ],

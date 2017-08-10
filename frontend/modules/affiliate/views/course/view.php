@@ -19,7 +19,6 @@ $this->title = "View Schedule Details";
 <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 page-heading">
         <h1>View Schedule Details</h1>
         <div class="col-sm-8">
-        <h4> Student:  <strong><?php echo $stud_info->first_name . ' ' . $stud_info->last_name; ?></strong> </h4>
     <h4> Lesson:  <strong><?php echo $les_info->lesson_name; ?></strong> </h4>
     <h4> Total Hours:  <?php echo $les_info->hours; ?></h4>
     <h4> Remaining Hours:  <?php echo $different; ?></h4>
