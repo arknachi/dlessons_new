@@ -24,9 +24,9 @@ class CronController extends Controller {
             $tomorrow = date("Y-m-d", strtotime("+1 day"));
 
             $students_schedules = DlStudentCourse::find()->joinWith('schedule')
-                    ->where(['scr_paid_status' => "1", 'db_schedules.schedule_date' => $tomorrow])
-                    ->andWhere(['!=', 'dl_student_course.schedule_id', 0])
-                    ->andWhere(['db_schedules.alert_notify' => '0'])
+                    ->where(['scr_paid_status' => "1", 'dl_student_course.scr_completed_status' => '0'])
+                    ->andWhere([ 'db_schedules.schedule_date' => $tomorrow, 'db_schedules.alert_notify' => '0', 'db_schedules.scr_completed_status' => '0'])
+                    ->andWhere([ 'db_schedules.isDeleted' => '0'])
                     ->all();
 
             if ($students_schedules) {
